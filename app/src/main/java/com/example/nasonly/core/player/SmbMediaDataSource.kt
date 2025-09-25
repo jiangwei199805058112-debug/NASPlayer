@@ -25,8 +25,11 @@ class SmbMediaDataSource(
             inputStream = result.getOrNull() ?: throw IOException("Failed to open SMB stream: ${result.exceptionOrNull()?.message}")
         }
         if (dataSpec.position > 0) {
-            if (!smbDataSource.seekStream(inputStream!!, dataSpec.position)) {
-                throw IOException("Seek failed")
+            val seekResult = runBlocking {
+                smbDataSource.seekStream(inputStream!!, dataSpec.position)
+            }
+            if (seekResult.getOrNull() != true) {
+                throw IOException("Seek failed: ${seekResult.exceptionOrNull()?.message}")
             }
         }
         bytesRead = 0
@@ -37,7 +40,7 @@ class SmbMediaDataSource(
         return try {
             val stream = inputStream ?: throw IOException("Stream not open")
             val read = stream.read(buffer, offset, readLength)
-            if (read > 0) bytesRead += read
+            if (read > 0) bytesRead += read.toLong()
             read
         } catch (e: Exception) {
             throw IOException(e)

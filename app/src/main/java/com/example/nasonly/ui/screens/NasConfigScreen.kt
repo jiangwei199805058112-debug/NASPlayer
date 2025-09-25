@@ -120,16 +120,17 @@ fun NasConfigScreen(
             }
         }
 
-        if (uiState.testResult != null) {
+        val testResult = uiState.testResult
+        if (testResult != null) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp)
             ) {
                 Text(
-                    text = uiState.testResult,
+                    text = testResult,
                     modifier = Modifier.padding(16.dp),
-                    color = if (uiState.testResult.contains("成功")) {
+                    color = if (testResult.contains("成功")) {
                         MaterialTheme.colorScheme.primary
                     } else {
                         MaterialTheme.colorScheme.error
@@ -140,9 +141,10 @@ fun NasConfigScreen(
     }
 
     // 错误对话框
-    if (uiState.error != null) {
+    val errorMessage = uiState.error
+    if (errorMessage != null) {
         ErrorDialog(
-            message = uiState.error,
+            message = errorMessage,
             onDismiss = { viewModel.clearError() },
             onRetry = {
                 viewModel.testConnection(host, share, username, password, domain, smbVersion)

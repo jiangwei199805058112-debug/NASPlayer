@@ -29,9 +29,9 @@ class ExoPlayerManager(
 
     fun prepare(uri: Uri) {
         val player = createPlayer()
-        val mediaSource = ProgressiveMediaSource.Factory {
-            SmbMediaDataSource.Factory(smbDataSource)
-        }.createMediaSource(MediaItem.fromUri(uri))
+        val dataSourceFactory = SmbMediaDataSource.Factory(smbDataSource)
+        val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+            .createMediaSource(MediaItem.fromUri(uri))
         player.setMediaSource(mediaSource)
         player.prepare()
     }

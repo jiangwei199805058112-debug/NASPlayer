@@ -99,9 +99,10 @@ fun MediaLibraryScreen(
     }
 
     // 错误对话框
-    if (uiState.error != null) {
+    val errorMessage = uiState.error
+    if (errorMessage != null) {
         ErrorDialog(
-            message = uiState.error,
+            message = errorMessage,
             onDismiss = { viewModel.clearError() },
             onRetry = { viewModel.refreshMediaFiles() }
         )
