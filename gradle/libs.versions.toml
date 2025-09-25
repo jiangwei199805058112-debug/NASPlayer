@@ -1,0 +1,28 @@
+[versions]
+androidGradlePlugin = "8.4.2"
+kotlin = "1.9.24"
+composeBom = "2024.06.00"
+hilt = "2.48"
+room = "2.6.1"
+ksp = "1.9.24-1.0.20"
+exoPlayer = "2.19.1"
+smbj = "0.11.5"
+coroutines = "1.8.0"
+
+[libraries]
+androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.13.1" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.7.7" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+ksp = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
+exoPlayer = { module = "com.google.android.exoplayer:exoplayer", version.ref = "exoPlayer" }
+smbj = { module = "com.hierynomus:smbj", version.ref = "smbj" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.0" }
