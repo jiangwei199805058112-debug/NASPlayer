@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,12 +24,35 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Build with Gradle
-      run: ./gradlew assembleDebug lint test
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
 
-    - name: Upload build logs
-      if: always()
+    - name: Accept SDK licenses
+      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --stacktrace --info --no-daemon
+
+    - name: Run Lint
+      run: ./gradlew lintDebug --stacktrace --continue --no-daemon
+      if: success() || failure()
+
+    - name: Run Unit Tests
+      run: ./gradlew testDebugUnitTest --stacktrace --continue --no-daemon
+      if: success() || failure()
+
+    - name: Upload Debug APK
       uses: actions/upload-artifact@v4
+      if: success()
       with:
-        name: build-logs
-        path: build.log
+        name: app-debug
+        path: app/build/outputs/apk/debug/*.apk
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          app/build/reports/
+          app/build/test-results/
