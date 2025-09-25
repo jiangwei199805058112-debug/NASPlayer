@@ -33,7 +33,7 @@ class SmbMediaDataSource(
             }
         }
         bytesRead = 0
-        return C.LENGTH_UNSET
+        return C.LENGTH_UNSET.toLong()
     }
 
     override fun read(buffer: ByteArray, offset: Int, readLength: Int): Int {
