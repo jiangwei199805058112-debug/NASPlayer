@@ -5,6 +5,8 @@ import com.example.nasonly.data.smb.SmbDataSource
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DataSpec
+import com.google.android.exoplayer2.upstream.TransferListener
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.io.InputStream
 
@@ -18,8 +20,10 @@ class SmbMediaDataSource(
     override fun open(dataSpec: DataSpec): Long {
         uri = dataSpec.uri
         val path = uri?.path ?: throw IOException("Invalid SMB path")
-        inputStream = smbDataSource.getInputStream(path)
-        if (inputStream == null) throw IOException("Failed to open SMB stream")
+        runBlocking {
+            val result = smbDataSource.getInputStream(path)
+            inputStream = result.getOrNull() ?: throw IOException("Failed to open SMB stream: ${result.exceptionOrNull()?.message}")
+        }
         if (dataSpec.position > 0) {
             if (!smbDataSource.seekStream(inputStream!!, dataSpec.position)) {
                 throw IOException("Seek failed")
@@ -50,6 +54,11 @@ class SmbMediaDataSource(
         uri = null
         bytesRead = 0
         smbDataSource.close()
+    }
+
+    override fun addTransferListener(transferListener: TransferListener) {
+        // Transfer listener functionality can be added here if needed
+        // For now, we'll provide an empty implementation
     }
 
     class Factory(private val smbDataSource: SmbDataSource) : DataSource.Factory {

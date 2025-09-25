@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nasonly.ui.viewmodel.VideoPlayerViewModel
+import com.example.nasonly.ui.viewmodel.VideoPlayerUiState
 import com.example.nasonly.core.ui.components.ErrorDialog
 import com.example.nasonly.core.ui.components.LoadingIndicator
 import com.example.nasonly.core.ui.components.VideoGestureOverlay
@@ -94,11 +95,11 @@ fun VideoPlayerScreen(
             }
 
             // 错误对话框
-            if (uiState.error != null) {
+            val errorMessage = uiState.error
+            if (errorMessage != null) {
                 ErrorDialog(
-                    message = uiState.error,
-                    onDismiss = { viewModel.clearError() },
-                    onRetry = { viewModel.retry(uri) }
+                    message = errorMessage,
+                    onDismiss = { viewModel.clearError() }
                 )
             }
         }
@@ -289,12 +290,3 @@ private fun formatTime(timeMs: Long): String {
     val seconds = totalSeconds % 60
     return String.format("%02d:%02d", minutes, seconds)
 }
-
-// 更新 UiState 数据类
-data class VideoPlayerUiState(
-    val isPlaying: Boolean = false,
-    val isBuffering: Boolean = false,
-    val error: String? = null,
-    val currentPosition: Long = 0L,
-    val duration: Long = 0L
-)
