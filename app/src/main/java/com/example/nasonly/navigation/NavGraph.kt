@@ -11,6 +11,8 @@ import androidx.navigation.NavType
 import com.example.nasonly.ui.screens.NasConfigScreen
 import com.example.nasonly.ui.screens.MediaLibraryScreen
 import com.example.nasonly.ui.screens.VideoPlayerScreen
+import com.example.nasonly.ui.screens.PlaylistManagementScreen
+import com.example.nasonly.ui.screens.PlaylistDetailScreen
 
 @Composable
 fun NavGraph(
@@ -23,6 +25,31 @@ fun NavGraph(
         }
         composable(Routes.MEDIA_LIBRARY) {
             MediaLibraryScreen(navController)
+        }
+        composable(Routes.PLAYLIST_MANAGEMENT) {
+            PlaylistManagementScreen(navController)
+        }
+        composable(
+            route = Routes.PLAYLIST_DETAIL,
+            arguments = listOf(
+                navArgument("playlistId") { 
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+            val playlistId = backStackEntry.arguments?.getLong("playlistId") ?: 0L
+            PlaylistDetailScreen(
+                playlistId = playlistId,
+                playlistName = "播放列表", // 简化处理，实际应该从数据库获取
+                onNavigateBack = { navController.popBackStack() },
+                onPlayVideo = { videoPath -> 
+                    val encodedUri = java.net.URLEncoder.encode(videoPath, "UTF-8")
+                    navController.navigate("video_player?uri=$encodedUri")
+                },
+                onAddVideos = { 
+                    // TODO: 实现添加视频功能
+                }
+            )
         }
         composable(
             route = Routes.VIDEO_PLAYER,
@@ -46,4 +73,12 @@ fun NavHostController.navigateToVideoPlayer(smbPath: String) {
 
 fun NavHostController.goBack() {
     this.popBackStack()
+}
+
+fun NavHostController.navigateToPlaylistManagement() {
+    this.navigate(Routes.PLAYLIST_MANAGEMENT)
+}
+
+fun NavHostController.navigateToPlaylistDetail(playlistId: Long) {
+    this.navigate("playlist_detail/$playlistId")
 }

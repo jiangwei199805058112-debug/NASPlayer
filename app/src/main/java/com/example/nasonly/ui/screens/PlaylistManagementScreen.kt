@@ -25,8 +25,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistManagementScreen(
-    onNavigateBack: () -> Unit,
-    onPlayPlaylist: (Long) -> Unit,
+    navController: androidx.navigation.NavController,
     playlistViewModel: PlaylistViewModel = hiltViewModel()
 ) {
     val playlists by playlistViewModel.playlists.collectAsState()
@@ -117,7 +116,7 @@ fun PlaylistManagementScreen(
                 items(playlists) { playlist ->
                     PlaylistCard(
                         playlist = playlist,
-                        onPlay = { onPlayPlaylist(playlist.id) },
+                        onPlay = { navController.navigate("playlist_detail/${playlist.id}") },
                         onEdit = {
                             selectedPlaylist = playlist
                             showEditDialog = true

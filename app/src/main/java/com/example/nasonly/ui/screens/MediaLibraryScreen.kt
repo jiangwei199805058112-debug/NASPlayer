@@ -45,6 +45,13 @@ fun MediaLibraryScreen(
             actions = {
                 IconButton(
                     onClick = { 
+                        navController.navigate("playlist_management")
+                    }
+                ) {
+                    Icon(Icons.Default.List, contentDescription = "播放列表")
+                }
+                IconButton(
+                    onClick = { 
                         if (selectedTabIndex == 0) {
                             viewModel.refreshMediaFiles()
                         } else {
