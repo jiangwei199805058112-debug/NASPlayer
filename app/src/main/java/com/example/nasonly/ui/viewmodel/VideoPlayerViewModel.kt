@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nasonly.core.player.ExoPlayerManager
 import com.example.nasonly.repository.SmbRepository
+import com.example.nasonly.data.db.PlaybackHistory
+import com.example.nasonly.data.db.PlaybackHistoryDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +20,8 @@ import android.net.Uri
 class VideoPlayerViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val exoPlayerManager: ExoPlayerManager,
-    private val smbRepository: SmbRepository
+    private val smbRepository: SmbRepository,
+    private val playbackHistoryDao: PlaybackHistoryDao
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(VideoPlayerUiState())
     val uiState: StateFlow<VideoPlayerUiState> = _uiState
@@ -69,6 +72,8 @@ class VideoPlayerViewModel @Inject constructor(
             exoPlayerManager.play()
             _uiState.value = _uiState.value.copy(isPlaying = true)
             startProgressUpdates()
+            // 开始播放时保存历史记录
+            savePlaybackHistory()
         } catch (e: Exception) {
             _uiState.value = _uiState.value.copy(error = "播放失败: ${e.message}")
         }
@@ -88,6 +93,8 @@ class VideoPlayerViewModel @Inject constructor(
         try {
             exoPlayerManager.seekTo(positionMs)
             _uiState.value = _uiState.value.copy(currentPosition = positionMs)
+            // 跳转时也保存历史记录
+            savePlaybackHistory()
         } catch (e: Exception) {
             _uiState.value = _uiState.value.copy(error = "跳转失败: ${e.message}")
         }
@@ -145,6 +152,8 @@ class VideoPlayerViewModel @Inject constructor(
     }
 
     fun release() {
+        // 在释放前保存最后一次播放历史
+        savePlaybackHistory()
         stopProgressUpdates()
         try {
             exoPlayerManager.release()
@@ -157,6 +166,7 @@ class VideoPlayerViewModel @Inject constructor(
     private fun startProgressUpdates() {
         stopProgressUpdates()
         progressUpdateJob = viewModelScope.launch {
+            var progressCounter = 0
             while (_uiState.value.isPlaying) {
                 try {
                     // 从 ExoPlayer 获取当前播放位置
@@ -168,6 +178,13 @@ class VideoPlayerViewModel @Inject constructor(
                         currentPosition = currentPosition,
                         duration = duration
                     )
+                    
+                    // 每10秒保存一次播放历史（避免频繁数据库写入）
+                    progressCounter++
+                    if (progressCounter >= 10) {
+                        savePlaybackHistory()
+                        progressCounter = 0
+                    }
                     
                     delay(1000) // 每秒更新一次
                 } catch (e: Exception) {
@@ -181,6 +198,45 @@ class VideoPlayerViewModel @Inject constructor(
     private fun stopProgressUpdates() {
         progressUpdateJob?.cancel()
         progressUpdateJob = null
+    }
+
+    private fun savePlaybackHistory() {
+        if (currentUri.isNotEmpty()) {
+            viewModelScope.launch {
+                try {
+                    val currentState = _uiState.value
+                    val history = PlaybackHistory(
+                        id = System.currentTimeMillis(), // 使用时间戳作为ID
+                        videoPath = currentUri,
+                        position = currentState.currentPosition,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    
+                    // 检查是否已存在相同路径的记录
+                    val existingHistory = playbackHistoryDao.getByVideoPath(currentUri)
+                    if (existingHistory.isNotEmpty()) {
+                        // 更新现有记录
+                        val existing = existingHistory.first()
+                        val updated = existing.copy(
+                            position = currentState.currentPosition,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        playbackHistoryDao.update(updated)
+                    } else {
+                        // 插入新记录
+                        playbackHistoryDao.insert(history)
+                    }
+                } catch (e: Exception) {
+                    // 静默处理历史记录保存失败，不影响播放体验
+                    android.util.Log.w("VideoPlayerViewModel", "Failed to save playback history: ${e.message}")
+                }
+            }
+        }
+    }
+
+    fun pauseAndSaveHistory() {
+        pause()
+        savePlaybackHistory()
     }
 
     override fun onCleared() {

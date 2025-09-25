@@ -82,7 +82,7 @@ fun VideoPlayerScreen(
                     uiState = uiState,
                     onPlayPause = {
                         if (uiState.isPlaying) {
-                            viewModel.pause()
+                            viewModel.pauseAndSaveHistory()
                         } else {
                             viewModel.play()
                         }
