@@ -5,17 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.nasonly.ui.viewmodel.MediaLibraryViewModel
+import com.example.nasonly.ui.viewmodel.HistoryItem
 import com.example.nasonly.core.ui.components.LoadingIndicator
 import com.example.nasonly.core.ui.components.ErrorDialog
 import android.net.Uri
@@ -27,9 +27,12 @@ fun MediaLibraryScreen(
     viewModel: MediaLibraryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val tabs = listOf("媒体文件", "播放历史")
 
     LaunchedEffect(Unit) {
         viewModel.loadMediaFiles()
+        viewModel.loadPlaybackHistory()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -37,63 +40,64 @@ fun MediaLibraryScreen(
             title = { Text("媒体库") },
             actions = {
                 IconButton(
-                    onClick = { viewModel.refreshMediaFiles() }
+                    onClick = { 
+                        if (selectedTabIndex == 0) {
+                            viewModel.refreshMediaFiles()
+                        } else {
+                            viewModel.loadPlaybackHistory()
+                        }
+                    }
                 ) {
                     Icon(Icons.Default.Refresh, contentDescription = "刷新")
                 }
             }
         )
 
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LoadingIndicator()
-                }
+        // 标签页
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = { Text(title) }
+                )
             }
-            
-            uiState.mediaList.isEmpty() && !uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "未找到媒体文件",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Button(onClick = { viewModel.refreshMediaFiles() }) {
-                            Text("重新扫描")
+        }
+
+        // 标签页内容
+        when (selectedTabIndex) {
+            0 -> {
+                // 媒体文件标签页
+                MediaFilesTab(
+                    uiState = uiState,
+                    onFileClick = { media ->
+                        if (media.isDirectory) {
+                            viewModel.navigateToFolder(media.path)
+                        } else {
+                            val encodedUri = Uri.encode(media.path)
+                            navController.navigate("video_player?uri=$encodedUri")
                         }
-                    }
-                }
+                    },
+                    onRetry = { viewModel.refreshMediaFiles() },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
-            
-            else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(uiState.mediaList) { media ->
-                        MediaItemCard(
-                            media = media,
-                            onClick = {
-                                if (media.isDirectory) {
-                                    viewModel.navigateToFolder(media.path)
-                                } else {
-                                    val encodedUri = Uri.encode(media.path)
-                                    navController.navigate("video_player?uri=$encodedUri")
-                                }
-                            }
-                        )
-                    }
-                }
+            1 -> {
+                // 播放历史标签页
+                PlaybackHistoryTab(
+                    historyItems = uiState.playbackHistory,
+                    isLoading = uiState.isLoading,
+                    onHistoryItemClick = { historyItem ->
+                        val encodedUri = Uri.encode(historyItem.path)
+                        navController.navigate("video_player?uri=$encodedUri")
+                    },
+                    onDeleteHistoryItem = { viewModel.deleteHistoryItem(it) },
+                    onClearHistory = { viewModel.clearPlaybackHistory() },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }
@@ -104,8 +108,140 @@ fun MediaLibraryScreen(
         ErrorDialog(
             message = errorMessage,
             onDismiss = { viewModel.clearError() },
-            onRetry = { viewModel.refreshMediaFiles() }
+            onRetry = { 
+                if (selectedTabIndex == 0) {
+                    viewModel.refreshMediaFiles()
+                } else {
+                    viewModel.loadPlaybackHistory()
+                }
+            }
         )
+    }
+}
+
+@Composable
+private fun MediaFilesTab(
+    uiState: com.example.nasonly.ui.viewmodel.MediaLibraryUiState,
+    onFileClick: (MediaItem) -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = modifier,
+                contentAlignment = Alignment.Center
+            ) {
+                LoadingIndicator()
+            }
+        }
+        
+        uiState.files.isEmpty() && !uiState.isLoading -> {
+            Box(
+                modifier = modifier,
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "未找到媒体文件",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Button(onClick = onRetry) {
+                        Text("重新扫描")
+                    }
+                }
+            }
+        }
+        
+        else -> {
+            LazyColumn(
+                modifier = modifier,
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(uiState.files) { smbFile ->
+                    val media = MediaItem(
+                        name = smbFile.name,
+                        path = smbFile.path,
+                        size = smbFile.size,
+                        isDirectory = smbFile.isDirectory
+                    )
+                    MediaItemCard(
+                        media = media,
+                        onClick = { onFileClick(media) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaybackHistoryTab(
+    historyItems: List<HistoryItem>,
+    isLoading: Boolean,
+    onHistoryItemClick: (HistoryItem) -> Unit,
+    onDeleteHistoryItem: (HistoryItem) -> Unit,
+    onClearHistory: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        // 顶部工具栏
+        if (historyItems.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = onClearHistory) {
+                    Text("清除全部")
+                }
+            }
+        }
+
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoadingIndicator()
+                }
+            }
+            
+            historyItems.isEmpty() -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "暂无播放历史",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(historyItems) { historyItem ->
+                        HistoryItemCard(
+                            historyItem = historyItem,
+                            onClick = { onHistoryItemClick(historyItem) },
+                            onDelete = { onDeleteHistoryItem(historyItem) }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -153,12 +289,90 @@ private fun MediaItemCard(
     }
 }
 
+@Composable
+private fun HistoryItemCard(
+    historyItem: HistoryItem,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Movie,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary
+            )
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = historyItem.fileName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "播放至 ${formatPosition(historyItem.position)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = historyItem.lastPlayed,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "删除",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
 private fun formatFileSize(bytes: Long): String {
     return when {
         bytes < 1024 -> "$bytes B"
         bytes < 1024 * 1024 -> "${bytes / 1024} KB"
         bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
         else -> "${bytes / (1024 * 1024 * 1024)} GB"
+    }
+}
+
+private fun formatPosition(positionMs: Long): String {
+    val totalSeconds = positionMs / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    
+    return if (hours > 0) {
+        String.format("%d:%02d:%02d", hours, minutes, seconds)
+    } else {
+        String.format("%02d:%02d", minutes, seconds)
     }
 }
 

@@ -56,9 +56,10 @@ class MainActivity : ComponentActivity() {
         }
     }
     
+    @Deprecated("This method is deprecated in API level 30")
     override fun onRequestPermissionsResult(
         requestCode: Int,
-        permissions: Array<out String>,
+        permissions: Array<String>, // 修复类型不匹配
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
