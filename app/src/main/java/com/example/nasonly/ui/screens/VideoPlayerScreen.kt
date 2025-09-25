@@ -1,6 +1,9 @@
 package com.example.nasonly.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -8,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nasonly.ui.viewmodel.VideoPlayerViewModel
-import com.example.nasonly.ui.viewmodel.VideoPlayerUiState
 
 @Composable
 fun VideoPlayerScreen(

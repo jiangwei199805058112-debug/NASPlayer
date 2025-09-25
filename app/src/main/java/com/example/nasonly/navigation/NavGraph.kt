@@ -6,11 +6,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
+import com.example.nasonly.ui.screens.NasConfigScreen
+import com.example.nasonly.ui.screens.MediaLibraryScreen
 import com.example.nasonly.ui.screens.VideoPlayerScreen
-// 请根据实际路径补充其它 Screen 的 import
-// import com.example.nasonly.ui.screens.NasConfigScreen
-// import com.example.nasonly.ui.screens.MediaLibraryScreen
-// import com.example.nasonly.ui.screens.PlaylistScreen
 
 @Composable
 fun NavGraph(
@@ -19,16 +19,21 @@ fun NavGraph(
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.NAS_CONFIG) {
-            // NasConfigScreen()
+            NasConfigScreen(navController)
         }
         composable(Routes.MEDIA_LIBRARY) {
-            // MediaLibraryScreen()
+            MediaLibraryScreen(navController)
         }
-        composable(Routes.PLAYLIST) { backStackEntry ->
-            val playlistId = backStackEntry.arguments?.getString("playlistId")?.toLongOrNull() ?: 0L
-            // PlaylistScreen(playlistId = playlistId)
-        }
-        composable(Routes.VIDEO_PLAYER) { backStackEntry ->
+        composable(
+            route = Routes.VIDEO_PLAYER,
+            arguments = listOf(
+                navArgument("uri") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
             val uri = backStackEntry.arguments?.getString("uri") ?: ""
             VideoPlayerScreen(uri = Uri.decode(uri))
         }
