@@ -16,6 +16,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.nasonly.ui.viewmodel.MediaLibraryViewModel
 import com.example.nasonly.ui.viewmodel.HistoryItem
+import com.example.nasonly.ui.components.EnhancedVideoList
+import com.example.nasonly.ui.components.VideoListToolbar
+import com.example.nasonly.ui.components.SortOrder
+import com.example.nasonly.ui.components.ViewMode
 import com.example.nasonly.core.ui.components.LoadingIndicator
 import com.example.nasonly.core.ui.components.ErrorDialog
 import android.net.Uri
@@ -126,54 +130,92 @@ private fun MediaFilesTab(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    when {
-        uiState.isLoading -> {
-            Box(
-                modifier = modifier,
-                contentAlignment = Alignment.Center
-            ) {
-                LoadingIndicator()
+    var sortOrder by remember { mutableStateOf(SortOrder.NAME_ASC) }
+    var viewMode by remember { mutableStateOf(ViewMode.LIST) }
+    var showThumbnails by remember { mutableStateOf(true) }
+    var searchQuery by remember { mutableStateOf("") }
+    
+    // 过滤文件
+    val filteredFiles = remember(uiState.files, searchQuery) {
+        if (searchQuery.isEmpty()) {
+            uiState.files
+        } else {
+            uiState.files.filter { file ->
+                file.name.contains(searchQuery, ignoreCase = true)
             }
         }
+    }
+    
+    Column(modifier = modifier) {
+        // 工具栏
+        if (uiState.files.isNotEmpty()) {
+            VideoListToolbar(
+                sortOrder = sortOrder,
+                viewMode = viewMode,
+                showThumbnails = showThumbnails,
+                onSortOrderChange = { sortOrder = it },
+                onViewModeChange = { viewMode = it },
+                onShowThumbnailsChange = { showThumbnails = it },
+                onSearch = { searchQuery = it },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
         
-        uiState.files.isEmpty() && !uiState.isLoading -> {
-            Box(
-                modifier = modifier,
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "未找到媒体文件",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Button(onClick = onRetry) {
-                        Text("重新扫描")
+                    LoadingIndicator()
+                }
+            }
+            
+            filteredFiles.isEmpty() && !uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = if (searchQuery.isEmpty()) "未找到媒体文件" else "未找到匹配的文件",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        if (searchQuery.isEmpty()) {
+                            Button(onClick = onRetry) {
+                                Text("重新扫描")
+                            }
+                        }
                     }
                 }
             }
-        }
-        
-        else -> {
-            LazyColumn(
-                modifier = modifier,
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(uiState.files) { smbFile ->
-                    val media = MediaItem(
-                        name = smbFile.name,
-                        path = smbFile.path,
-                        size = smbFile.size,
-                        isDirectory = smbFile.isDirectory
-                    )
-                    MediaItemCard(
-                        media = media,
-                        onClick = { onFileClick(media) }
-                    )
-                }
+            
+            else -> {
+                EnhancedVideoList(
+                    files = filteredFiles,
+                    showThumbnails = showThumbnails,
+                    viewMode = viewMode,
+                    sortOrder = sortOrder,
+                    onFileClick = { smbFile ->
+                        val media = MediaItem(
+                            name = smbFile.name,
+                            path = smbFile.path,
+                            size = smbFile.size,
+                            isDirectory = smbFile.isDirectory
+                        )
+                        onFileClick(media)
+                    },
+                    onFileLongClick = { smbFile ->
+                        // TODO: 显示文件详细信息对话框
+                    },
+                    onAddToPlaylist = { smbFile ->
+                        // TODO: 显示添加到播放列表对话框
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }

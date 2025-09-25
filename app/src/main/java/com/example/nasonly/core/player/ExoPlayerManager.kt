@@ -48,6 +48,12 @@ class ExoPlayerManager(
         exoPlayer?.seekTo(positionMs)
     }
 
+    fun setPlaybackSpeed(speed: Float) {
+        exoPlayer?.setPlaybackParameters(
+            exoPlayer!!.playbackParameters.withSpeed(speed)
+        )
+    }
+
     fun release() {
         exoPlayer?.release()
         exoPlayer = null

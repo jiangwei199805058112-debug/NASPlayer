@@ -10,6 +10,7 @@ ksp = "1.9.22-1.0.17"
 exoPlayer = "2.19.1"
 smbj = "0.11.5"
 coroutines = "1.8.0"
+coil = "2.6.0"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.13.1" }
@@ -35,6 +36,7 @@ smbj = { module = "com.hierynomus:smbj", version.ref = "smbj" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.0" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
 # Test dependencies
 junit = { module = "junit:junit", version = "4.13.2" }

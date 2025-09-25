@@ -10,16 +10,18 @@ import androidx.room.RoomDatabase.Builder
     entities = [
         VideoEntity::class,
         PlaybackHistory::class,
-        PlaylistEntity::class,
+        Playlist::class,
+        PlaylistItem::class,
         ScanProgress::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun videoDao(): VideoDao
     abstract fun playbackHistoryDao(): PlaybackHistoryDao
     abstract fun playlistDao(): PlaylistDao
+    abstract fun playlistItemDao(): PlaylistItemDao
     abstract fun scanProgressDao(): ScanProgressDao
 
     companion object {

@@ -7,10 +7,14 @@ import com.example.nasonly.core.player.ExoPlayerManager
 import com.example.nasonly.repository.SmbRepository
 import com.example.nasonly.data.db.PlaybackHistory
 import com.example.nasonly.data.db.PlaybackHistoryDao
+import com.example.nasonly.data.db.PlaylistItem
+import com.example.nasonly.data.db.PlaylistItemDao
+import com.example.nasonly.data.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
@@ -21,13 +25,18 @@ class VideoPlayerViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val exoPlayerManager: ExoPlayerManager,
     private val smbRepository: SmbRepository,
-    private val playbackHistoryDao: PlaybackHistoryDao
+    private val playbackHistoryDao: PlaybackHistoryDao,
+    private val playlistItemDao: PlaylistItemDao,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(VideoPlayerUiState())
     val uiState: StateFlow<VideoPlayerUiState> = _uiState
 
     private var progressUpdateJob: Job? = null
     private var currentUri: String = ""
+    private var currentPlaylistId: Long = -1
+    private var currentPlaylist: List<PlaylistItem> = emptyList()
+    private var currentIndex: Int = -1
 
     companion object {
         private const val SEEK_INCREMENT_MS = 10000L // 10秒
@@ -238,6 +247,166 @@ class VideoPlayerViewModel @Inject constructor(
         pause()
         savePlaybackHistory()
     }
+    
+    // ==================== 播放列表相关方法 ====================
+    
+    /**
+     * 初始化播放列表播放
+     */
+    fun initializePlaylistPlayer(playlistId: Long, startIndex: Int = 0) {
+        currentPlaylistId = playlistId
+        viewModelScope.launch {
+            try {
+                // 加载播放列表项
+                playlistItemDao.getPlaylistItems(playlistId).collect { items ->
+                    currentPlaylist = items
+                    currentIndex = startIndex.coerceIn(0, items.size - 1)
+                    
+                    _uiState.value = _uiState.value.copy(
+                        currentPlaylist = items,
+                        currentIndex = currentIndex,
+                        isPlaylistMode = true,
+                        canPlayPrevious = currentIndex > 0,
+                        canPlayNext = currentIndex < items.size - 1
+                    )
+                    
+                    // 加载用户偏好设置
+                    val autoPlay = userPreferences.autoPlayNext.first()
+                    val speed = userPreferences.playbackSpeed.first()
+                    
+                    _uiState.value = _uiState.value.copy(
+                        autoPlayNext = autoPlay,
+                        playbackSpeed = speed
+                    )
+                    
+                    // 播放当前索引的视频
+                    if (items.isNotEmpty() && currentIndex >= 0) {
+                        val currentItem = items[currentIndex]
+                        initializePlayer(currentItem.videoPath)
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "加载播放列表失败: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * 播放下一个视频
+     */
+    fun playNext() {
+        if (currentIndex < currentPlaylist.size - 1) {
+            currentIndex++
+            updateCurrentPlaylistItem()
+        }
+    }
+    
+    /**
+     * 播放上一个视频
+     */
+    fun playPrevious() {
+        if (currentIndex > 0) {
+            currentIndex--
+            updateCurrentPlaylistItem()
+        }
+    }
+    
+    /**
+     * 跳转到指定索引的视频
+     */
+    fun playItemAt(index: Int) {
+        if (index in 0 until currentPlaylist.size) {
+            currentIndex = index
+            updateCurrentPlaylistItem()
+        }
+    }
+    
+    /**
+     * 当前视频播放完毕时的处理
+     */
+    fun onVideoCompleted() {
+        val currentState = _uiState.value
+        if (currentState.isPlaylistMode && currentState.autoPlayNext && currentState.canPlayNext) {
+            playNext()
+        } else if (currentState.isPlaylistMode) {
+            // 播放列表播放完毕
+            pause()
+            _uiState.value = _uiState.value.copy(
+                currentPosition = 0L
+            )
+        }
+    }
+    
+    /**
+     * 设置播放速度
+     */
+    fun setPlaybackSpeed(speed: Float) {
+        viewModelScope.launch {
+            try {
+                exoPlayerManager.setPlaybackSpeed(speed)
+                userPreferences.setPlaybackSpeed(speed)
+                _uiState.value = _uiState.value.copy(playbackSpeed = speed)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "设置播放速度失败: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * 切换自动播放下一个
+     */
+    fun toggleAutoPlayNext() {
+        val newValue = !_uiState.value.autoPlayNext
+        viewModelScope.launch {
+            userPreferences.setAutoPlayNext(newValue)
+            _uiState.value = _uiState.value.copy(autoPlayNext = newValue)
+        }
+    }
+    
+    /**
+     * 获取当前播放的项目信息
+     */
+    fun getCurrentPlaylistItem(): PlaylistItem? {
+        return if (currentIndex in 0 until currentPlaylist.size) {
+            currentPlaylist[currentIndex]
+        } else null
+    }
+    
+    /**
+     * 退出播放列表模式
+     */
+    fun exitPlaylistMode() {
+        currentPlaylistId = -1
+        currentPlaylist = emptyList()
+        currentIndex = -1
+        _uiState.value = _uiState.value.copy(
+            isPlaylistMode = false,
+            currentPlaylist = emptyList(),
+            currentIndex = -1,
+            canPlayPrevious = false,
+            canPlayNext = false
+        )
+    }
+    
+    private fun updateCurrentPlaylistItem() {
+        if (currentIndex in 0 until currentPlaylist.size) {
+            val currentItem = currentPlaylist[currentIndex]
+            
+            // 更新UI状态
+            _uiState.value = _uiState.value.copy(
+                currentIndex = currentIndex,
+                canPlayPrevious = currentIndex > 0,
+                canPlayNext = currentIndex < currentPlaylist.size - 1
+            )
+            
+            // 初始化新的视频播放
+            initializePlayer(currentItem.videoPath)
+        }
+    }
 
     override fun onCleared() {
         release()
@@ -253,5 +422,13 @@ data class VideoPlayerUiState(
     val duration: Long = 0L,
     val volume: Float = 0.5f,
     val brightness: Float = 0.5f,
-    val isFullscreen: Boolean = false
+    val isFullscreen: Boolean = false,
+    // 播放列表相关
+    val currentPlaylist: List<PlaylistItem> = emptyList(),
+    val currentIndex: Int = -1,
+    val isPlaylistMode: Boolean = false,
+    val autoPlayNext: Boolean = false,
+    val playbackSpeed: Float = 1.0f,
+    val canPlayPrevious: Boolean = false,
+    val canPlayNext: Boolean = false
 )
