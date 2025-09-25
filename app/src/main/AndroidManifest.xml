@@ -3,7 +3,7 @@
 
     <application
         android:name=".AppApplication"
-        android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+        android:theme="@style/Theme.NASPlayer">
         <activity android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
