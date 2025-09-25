@@ -1,0 +1,43 @@
+name: NASPlayer Auto Build & Fix
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Gradle
+        id: build
+        run: |
+          ./gradlew assembleDebug || echo "BUILD_FAILED" > build_failed.flag
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: app/build/reports
+
+      - name: Run AI Auto Fix
+        if: failure()
+        run: |
+          python3 scripts/fix_errors.py app/build/reports > ai_patch.diff
+          if [ -s ai_patch.diff ]; then
+            git apply ai_patch.diff
+            git config user.name "auto-bot"
+            git config user.email "bot@example.com"
+            git add .
+            git commit -m "fix: auto-fix build error"
+            git push
+          fi
