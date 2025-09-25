@@ -21,14 +21,15 @@ jobs:
         run: |
           yes | sdkmanager --licenses
           sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-      - name: Build Debug APK
-        uses: gradle/gradle-build-action@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.6'     # 若你的 AGP 为 8.7，请改为 8.7
-          arguments: |
-            :app:assembleDebug
-            :app:lintDebug
-            test
+          gradle-version: '8.6'
+      - name: Build Debug APK
+        run: |
+          ./gradlew :app:assembleDebug
+          ./gradlew :app:lintDebug
+          ./gradlew test
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
