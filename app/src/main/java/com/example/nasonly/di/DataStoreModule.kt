@@ -2,6 +2,7 @@ package com.example.nasonly.di
 
 import android.content.Context
 import com.example.nasonly.data.datastore.NasPrefs
+import com.example.nasonly.data.preferences.UserPreferences
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,4 +16,8 @@ object DataStoreModule {
     @Provides
     @Singleton
     fun provideNasPrefs(@ApplicationContext context: Context): NasPrefs = NasPrefs(context)
+
+    @Provides
+    @Singleton
+    fun provideUserPreferences(@ApplicationContext context: Context): UserPreferences = UserPreferences(context)
 }

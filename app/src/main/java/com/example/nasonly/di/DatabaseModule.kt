@@ -32,4 +32,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideScanProgressDao(db: AppDatabase): ScanProgressDao = db.scanProgressDao()
+
+    @Provides
+    @Singleton
+    fun providePlaylistItemDao(db: AppDatabase): PlaylistItemDao = db.playlistItemDao()
 }
