@@ -197,13 +197,10 @@ fun NasConfigTab(viewModel: NasConfigViewModel) {
 
 @Composable
 fun PlayerSettingsTab(viewModel: SettingsViewModel) {
-    val subtitleEnabled by viewModel.subtitleEnabled.collectAsState()
-    val subtitleSize by viewModel.subtitleSize.collectAsState()
-    val subtitleLanguage by viewModel.subtitleLanguage.collectAsState()
-    val audioTrackLanguage by viewModel.audioTrackLanguage.collectAsState()
     val playbackSpeed by viewModel.playbackSpeed.collectAsState()
     val autoPlayNext by viewModel.autoPlayNext.collectAsState()
     val resumePlayback by viewModel.resumePlayback.collectAsState()
+    val screenOrientation by viewModel.screenOrientation.collectAsState()
     
     LazyColumn(
         modifier = Modifier
@@ -212,55 +209,18 @@ fun PlayerSettingsTab(viewModel: SettingsViewModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            SettingGroup(title = "字幕设置") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SwitchSetting(
-                        title = "启用字幕",
-                        description = "自动加载视频字幕",
-                        checked = subtitleEnabled,
-                        onCheckedChange = viewModel::setSubtitleEnabled
-                    )
-                    
-                    SliderSetting(
-                        title = "字幕大小",
-                        description = "${subtitleSize.roundToInt()}sp",
-                        value = subtitleSize,
-                        valueRange = 12f..32f,
-                        onValueChange = viewModel::setSubtitleSize
-                    )
-                    
-                    DropdownSetting(
-                        title = "字幕语言",
-                        description = getLanguageDisplayName(subtitleLanguage),
-                        options = listOf(
-                            "auto" to "自动检测",
-                            "zh" to "中文",
-                            "en" to "英文",
-                            "ja" to "日文",
-                            "ko" to "韩文"
-                        ),
-                        selectedValue = subtitleLanguage,
-                        onValueChange = viewModel::setSubtitleLanguage
-                    )
-                }
-            }
-        }
-        
-        item {
-            SettingGroup(title = "音频设置") {
+            SettingGroup(title = "显示设置") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     DropdownSetting(
-                        title = "音频轨道语言",
-                        description = getLanguageDisplayName(audioTrackLanguage),
+                        title = "屏幕方向",
+                        description = getOrientationDisplayName(screenOrientation),
                         options = listOf(
-                            "auto" to "自动选择",
-                            "zh" to "中文",
-                            "en" to "英文",
-                            "ja" to "日文",
-                            "ko" to "韩文"
+                            "auto" to "自动旋转",
+                            "portrait" to "竖屏锁定",
+                            "landscape" to "横屏锁定"
                         ),
-                        selectedValue = audioTrackLanguage,
-                        onValueChange = viewModel::setAudioTrackLanguage
+                        selectedValue = screenOrientation,
+                        onValueChange = viewModel::setScreenOrientation
                     )
                 }
             }
@@ -559,7 +519,7 @@ fun DropdownSetting(
     title: String,
     description: String,
     options: List<Pair<String, String>>,
-    selectedValue: String,
+    @Suppress("UNUSED_PARAMETER") selectedValue: String,
     onValueChange: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -653,6 +613,15 @@ private fun getLanguageDisplayName(language: String): String {
         "ja" -> "日文"
         "ko" -> "韩文"
         else -> "自动检测"
+    }
+}
+
+private fun getOrientationDisplayName(orientation: String): String {
+    return when (orientation) {
+        "auto" -> "自动旋转"
+        "portrait" -> "竖屏锁定"
+        "landscape" -> "横屏锁定"
+        else -> "自动旋转"
     }
 }
 

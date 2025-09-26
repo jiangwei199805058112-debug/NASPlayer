@@ -2,10 +2,10 @@ package com.example.nasonly.core.player
 
 import android.net.Uri
 import com.example.nasonly.data.smb.SmbDataSource
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DataSpec
-import com.google.android.exoplayer2.upstream.TransferListener
+import androidx.media3.common.C
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.TransferListener
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.io.InputStream

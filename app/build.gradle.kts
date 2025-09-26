@@ -73,8 +73,10 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     
-    // ExoPlayer
-    implementation(libs.exoPlayer)
+    // Media3 ExoPlayer
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
+    implementation(libs.media3.common)
     
     // SMB
     implementation(libs.smbj)
