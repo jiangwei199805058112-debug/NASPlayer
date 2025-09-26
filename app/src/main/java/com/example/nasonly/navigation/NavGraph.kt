@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
+import com.example.nasonly.ui.discovery.NasDiscoveryScreen
 import com.example.nasonly.ui.screens.NasConfigScreen
 import com.example.nasonly.ui.screens.MediaLibraryScreen
 import com.example.nasonly.ui.screens.VideoPlayerScreen
@@ -21,6 +22,14 @@ fun NavGraph(
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Routes.NAS_DISCOVERY) {
+            NasDiscoveryScreen(
+                onDeviceConnected = { device ->
+                    // 连接成功后导航到媒体库
+                    navController.navigate(Routes.MEDIA_LIBRARY)
+                }
+            )
+        }
         composable(Routes.NAS_CONFIG) {
             NasConfigScreen(navController)
         }

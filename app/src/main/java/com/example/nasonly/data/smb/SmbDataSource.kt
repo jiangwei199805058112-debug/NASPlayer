@@ -1,7 +1,17 @@
 package com.example.nasonly.data.smb
 
 import android.util.Log
-import com.example.nasonly.data.media.VideoMetadataExtractor
+import com.example.nasonly.data.m            // 使用真实的 SMB 文件列表获取逻辑
+            val files = if (smbManager is SmbConnectionManager) {
+                smbManager.listDirectory(directoryPath)
+            } else {
+                // 如果不是我们的实现，返回空列表
+                Log.w(TAG, "SMB manager is not SmbConnectionManager, cannot list directory")
+                emptyList()
+            }
+            
+            Log.d(TAG, "Found ${files.size} files in directory: $directoryPath")
+            Result.success(files)etadataExtractor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -86,20 +96,24 @@ class SmbDataSource @Inject constructor(
         try {
             Log.d(TAG, "Listing files in directory: $directoryPath")
             
-            if (!smbManager.isConnected() && !smbManager.connect()) {
-                return@withContext Result.failure(IOException("无法连接到 SMB 服务器"))
+            if (!smbManager.isConnected()) {
+                Log.d(TAG, "SMB not connected, attempting to connect...")
+                if (!smbManager.connect()) {
+                    return@withContext Result.failure(IOException("无法连接到 SMB 服务器"))
+                }
             }
 
-            // 这里应该实现真实的文件列表获取逻辑
-            // 为了演示，返回一些模拟数据
-            val mockFiles = listOf(
-                SmbFileInfo("video1.mp4", "$directoryPath/video1.mp4", 1024000L, false),
-                SmbFileInfo("video2.mkv", "$directoryPath/video2.mkv", 2048000L, false),
-                SmbFileInfo("movies", "$directoryPath/movies", 0L, true)
-            )
+            // 使用真实的 SMB 文件列表获取逻辑
+            val files = if (smbManager is SmbConnectionManager) {
+                smbManager.listDirectory(directoryPath)
+            } else {
+                // 如果不是我们的实现，返回空列表
+                Log.w(TAG, "SMB manager is not SmbConnectionManager, cannot list directory")
+                emptyList()
+            }
             
-            Log.d(TAG, "Found ${mockFiles.size} files/folders")
-            Result.success(mockFiles)
+            Log.d(TAG, "Found ${files.size} files/folders")
+            Result.success(files)
         } catch (e: Exception) {
             Log.e(TAG, "Error listing files", e)
             Result.failure(e)
