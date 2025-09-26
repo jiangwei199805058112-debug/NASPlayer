@@ -15,9 +15,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Set PowerShell execution policy
+    - name: Set PowerShell Execution Policy
       shell: pwsh
-      run: Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
+      run: |
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
