@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows, x64]
 
     steps:
     - name: Checkout
@@ -21,24 +21,110 @@ jobs:
         distribution: temurin
         java-version: '17'
 
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
+    - name: Cache Gradle
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
-    - name: Make gradlew executable
-      run: chmod +x ./gradlew
+    - name: Make gradlew executable (Windows)
+      run: |
+        if (Test-Path "./gradlew.bat") {
+          Write-Host "Using gradlew.bat for Windows"
+        } else {
+          Write-Host "gradlew.bat not found, using gradlew"
+        }
+      shell: powershell
 
-    - name: Accept SDK licenses
-      run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+    - name: Verify local AVD configuration
+      run: |
+        echo "Checking for testAVD..."
+        $avdPath = "$env:USERPROFILE\.android\avd\testAVD.avd"
+        if (Test-Path $avdPath) {
+          Write-Host "✅ Found testAVD at: $avdPath"
+        } else {
+          Write-Host "❌ testAVD not found. Please ensure you have created an AVD named 'testAVD' with:"
+          Write-Host "   - API Level: 34"
+          Write-Host "   - Architecture: x86_64" 
+          Write-Host "   - Target: google_apis"
+          Write-Host "Available AVDs:"
+          $avdList = Get-ChildItem "$env:USERPROFILE\.android\avd" -Filter "*.avd" | Select-Object Name
+          $avdList | ForEach-Object { Write-Host "   - $($_.Name -replace '\.avd$', '')" }
+          exit 1
+        }
+      shell: powershell
 
     - name: Build project
-      run: ./gradlew build --stacktrace --no-daemon
+      run: |
+        if (Test-Path "./gradlew.bat") {
+          .\gradlew.bat build --stacktrace --no-daemon
+        } else {
+          .\gradlew build --stacktrace --no-daemon
+        }
+      shell: powershell
 
     - name: Run Unit Tests
-      run: ./gradlew testDebugUnitTest --stacktrace --continue --no-daemon
+      run: |
+        if (Test-Path "./gradlew.bat") {
+          .\gradlew.bat testDebugUnitTest --stacktrace --continue --no-daemon
+        } else {
+          .\gradlew testDebugUnitTest --stacktrace --continue --no-daemon
+        }
+      shell: powershell
+      if: success() || failure()
+
+    - name: Start Android Emulator
+      run: |
+        Write-Host "Starting testAVD emulator..."
+        $emulatorPath = "$env:ANDROID_HOME\emulator\emulator.exe"
+        if (Test-Path $emulatorPath) {
+          Start-Process -FilePath $emulatorPath -ArgumentList "-avd", "testAVD", "-no-snapshot", "-wipe-data", "-no-boot-anim" -PassThru
+          Write-Host "Waiting for emulator to start..."
+          
+          # Wait for emulator to be ready (max 5 minutes)
+          $timeout = 300
+          $elapsed = 0
+          do {
+            Start-Sleep -Seconds 10
+            $elapsed += 10
+            $adbDevices = & "$env:ANDROID_HOME\platform-tools\adb.exe" devices
+            Write-Host "Emulator status: $adbDevices"
+          } while ($elapsed -lt $timeout -and $adbDevices -notmatch "emulator.*device")
+          
+          if ($elapsed -ge $timeout) {
+            Write-Host "❌ Emulator failed to start within 5 minutes"
+            exit 1
+          } else {
+            Write-Host "✅ Emulator is ready"
+          }
+        } else {
+          Write-Host "❌ Emulator not found at: $emulatorPath"
+          Write-Host "Please ensure Android SDK is properly installed"
+          exit 1
+        }
+      shell: powershell
+
+    - name: Run Connected Android Tests
+      run: |
+        Write-Host "Running connected Android tests..."
+        if (Test-Path "./gradlew.bat") {
+          .\gradlew.bat connectedAndroidTest --stacktrace --continue --no-daemon
+        } else {
+          .\gradlew connectedAndroidTest --stacktrace --continue --no-daemon
+        }
+      shell: powershell
       if: success() || failure()
 
     - name: Run Lint
-      run: ./gradlew lintDebug --stacktrace --continue --no-daemon
+      run: |
+        if (Test-Path "./gradlew.bat") {
+          .\gradlew.bat lintDebug --stacktrace --continue --no-daemon
+        } else {
+          .\gradlew lintDebug --stacktrace --continue --no-daemon
+        }
+      shell: powershell
       if: success() || failure()
 
     - name: Upload Debug APK
