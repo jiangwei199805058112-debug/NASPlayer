@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude test files from SpotBugs analysis -->
+    <Match>
+        <Class name="~.*Test.*"/>
+    </Match>
+    
+    <!-- Exclude generated files -->
+    <Match>
+        <Class name="~.*\.BuildConfig"/>
+    </Match>
+    
+    <Match>
+        <Class name="~.*\.R\$.*"/>
+    </Match>
+    
+    <Match>
+        <Class name="~.*\.R"/>
+    </Match>
+    
+    <!-- Exclude Hilt generated files -->
+    <Match>
+        <Class name="~.*Hilt_.*"/>
+    </Match>
+    
+    <Match>
+        <Class name="~.*_HiltModules.*"/>
+    </Match>
+    
+    <Match>
+        <Class name="~.*_Factory"/>
+    </Match>
+    
+    <Match>
+        <Class name="~.*_MembersInjector"/>
+    </Match>
+    
+    <!-- Exclude specific Android-related false positives -->
+    <Match>
+        <Bug pattern="DM_EXIT"/>
+        <Class name="~.*Activity.*"/>
+    </Match>
+    
+    <!-- Exclude serialization warnings for data classes -->
+    <Match>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+        <Class name="~.*\.data\..*"/>
+    </Match>
+    
+    <!-- Exclude field naming issues for data classes -->
+    <Match>
+        <Bug pattern="NM_FIELD_NAMING_CONVENTION"/>
+        <Class name="~.*\.data\..*"/>
+    </Match>
+    
+    <!-- Exclude synchronization warnings for Room entities -->
+    <Match>
+        <Bug pattern="IS2_INCONSISTENT_SYNC"/>
+        <Class name="~.*\.database\..*"/>
+    </Match>
+    
+    <!-- Exclude Android Parcelable implementations -->
+    <Match>
+        <Bug pattern="SE_BAD_FIELD"/>
+        <Field type="android.os.Parcel"/>
+    </Match>
+    
+    <!-- Exclude Compose-related false positives -->
+    <Match>
+        <Bug pattern="UPM_UNCALLED_PRIVATE_METHOD"/>
+        <Class name="~.*Kt"/>
+        <Method name="~.*\$lambda.*"/>
+    </Match>
+    
+    <!-- Exclude ViewModel false positives -->
+    <Match>
+        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+        <Class name="~.*ViewModel"/>
+    </Match>
+    
+    <!-- Exclude coroutines-related false positives -->
+    <Match>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+        <Method name="~.*launch.*"/>
+    </Match>
+    
+    <!-- Exclude dependency injection related issues -->
+    <Match>
+        <Bug pattern="UWF_UNWRITTEN_FIELD"/>
+        <Field name="~.*" type="~javax\.inject\..*"/>
+    </Match>
+    
+    <!-- Exclude performance warnings for debug builds -->
+    <Match>
+        <Bug pattern="SBSC_USE_STRINGBUFFER_CONCATENATION"/>
+        <Class name="~.*Debug.*"/>
+    </Match>
+</FindBugsFilter>

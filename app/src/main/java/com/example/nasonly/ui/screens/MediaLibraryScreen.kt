@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -100,6 +101,7 @@ fun MediaLibraryScreen(
                         }
                     },
                     onRetry = { viewModel.refreshMediaFiles() },
+                    onLoadMore = { viewModel.loadMoreFiles() },
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -142,6 +144,7 @@ private fun MediaFilesTab(
     uiState: com.example.nasonly.ui.viewmodel.MediaLibraryUiState,
     onFileClick: (MediaItem) -> Unit,
     onRetry: () -> Unit,
+    onLoadMore: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var sortOrder by remember { mutableStateOf(SortOrder.NAME_ASC) }
@@ -149,13 +152,22 @@ private fun MediaFilesTab(
     var showThumbnails by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
     
-    // 过滤文件
-    val filteredFiles = remember(uiState.files, searchQuery) {
-        if (searchQuery.isEmpty()) {
-            uiState.files
-        } else {
-            uiState.files.filter { file ->
-                file.name.contains(searchQuery, ignoreCase = true)
+    // 搜索防抖处理
+    var debouncedSearchQuery by remember { mutableStateOf("") }
+    LaunchedEffect(searchQuery) {
+        kotlinx.coroutines.delay(300) // 300ms 防抖
+        debouncedSearchQuery = searchQuery
+    }
+    
+    // 优化搜索过滤性能，使用derivedStateOf延迟计算
+    val filteredFiles by remember(uiState.files, debouncedSearchQuery) {
+        derivedStateOf {
+            if (debouncedSearchQuery.isEmpty()) {
+                uiState.files
+            } else {
+                uiState.files.filter { file ->
+                    file.name.contains(debouncedSearchQuery, ignoreCase = true)
+                }
             }
         }
     }
@@ -213,6 +225,8 @@ private fun MediaFilesTab(
                     showThumbnails = showThumbnails,
                     viewMode = viewMode,
                     sortOrder = sortOrder,
+                    hasMoreData = uiState.hasMoreFiles,
+                    isLoadingMore = uiState.isLoadingMore,
                     onFileClick = { smbFile ->
                         val media = MediaItem(
                             name = smbFile.name,
@@ -228,6 +242,7 @@ private fun MediaFilesTab(
                     onAddToPlaylist = { smbFile ->
                         // TODO: 显示添加到播放列表对话框
                     },
+                    onLoadMore = onLoadMore,
                     modifier = Modifier.fillMaxSize()
                 )
             }

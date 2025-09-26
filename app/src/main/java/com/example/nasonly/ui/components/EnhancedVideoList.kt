@@ -9,7 +9,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -19,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -27,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import android.graphics.drawable.ColorDrawable
 import com.example.nasonly.R
 import com.example.nasonly.data.smb.SmbFileInfo
 
@@ -50,29 +56,65 @@ fun EnhancedVideoList(
     onFileClick: (SmbFileInfo) -> Unit,
     onFileLongClick: (SmbFileInfo) -> Unit = {},
     onAddToPlaylist: (SmbFileInfo) -> Unit = {},
+    onLoadMore: () -> Unit = {},
+    hasMoreData: Boolean = false,
+    isLoadingMore: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val sortedFiles = remember(files, sortOrder) {
-        when (sortOrder) {
-            SortOrder.NAME_ASC -> files.sortedBy { it.name.lowercase() }
-            SortOrder.NAME_DESC -> files.sortedByDescending { it.name.lowercase() }
-            SortOrder.DATE_ASC -> files.sortedBy { it.lastModified }
-            SortOrder.DATE_DESC -> files.sortedByDescending { it.lastModified }
-            SortOrder.SIZE_ASC -> files.sortedBy { it.size }
-            SortOrder.SIZE_DESC -> files.sortedByDescending { it.size }
-            SortOrder.DURATION_ASC -> files.sortedBy { it.duration }
-            SortOrder.DURATION_DESC -> files.sortedByDescending { it.duration }
+    // 优化排序计算，使用derivedStateOf避免不必要的重计算
+    val sortedFiles by remember {
+        derivedStateOf {
+            when (sortOrder) {
+                SortOrder.NAME_ASC -> files.sortedBy { it.name.lowercase() }
+                SortOrder.NAME_DESC -> files.sortedByDescending { it.name.lowercase() }
+                SortOrder.DATE_ASC -> files.sortedBy { it.lastModified }
+                SortOrder.DATE_DESC -> files.sortedByDescending { it.lastModified }
+                SortOrder.SIZE_ASC -> files.sortedBy { it.size }
+                SortOrder.SIZE_DESC -> files.sortedByDescending { it.size }
+                SortOrder.DURATION_ASC -> files.sortedBy { it.duration }
+                SortOrder.DURATION_DESC -> files.sortedByDescending { it.duration }
+            }
+        }
+    }
+    
+    // 滚动状态
+    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
+    
+    // 检测滚动到底部
+    LaunchedEffect(listState, gridState, hasMoreData) {
+        if (!hasMoreData || isLoadingMore) return@LaunchedEffect
+        
+        snapshotFlow {
+            when (viewMode) {
+                ViewMode.LIST -> {
+                    val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                    lastVisibleIndex >= sortedFiles.size - 3 // 提前3个item开始加载
+                }
+                ViewMode.GRID -> {
+                    val lastVisibleIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                    lastVisibleIndex >= sortedFiles.size - 6 // 提前6个item开始加载（2行）
+                }
+            }
+        }.collect { shouldLoadMore ->
+            if (shouldLoadMore) {
+                onLoadMore()
+            }
         }
     }
     
     when (viewMode) {
         ViewMode.LIST -> {
             LazyColumn(
+                state = listState,
                 modifier = modifier,
                 contentPadding = PaddingValues(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(sortedFiles) { file ->
+                items(
+                    items = sortedFiles,
+                    key = { file -> file.path } // 使用stable key提高性能
+                ) { file ->
                     EnhancedVideoListItem(
                         file = file,
                         showThumbnail = showThumbnails,
@@ -81,17 +123,35 @@ fun EnhancedVideoList(
                         onAddToPlaylist = { onAddToPlaylist(file) }
                     )
                 }
+                
+                // 加载更多指示器
+                if (isLoadingMore) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        }
+                    }
+                }
             }
         }
         ViewMode.GRID -> {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 180.dp),
+                state = gridState,
                 modifier = modifier,
                 contentPadding = PaddingValues(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(sortedFiles) { file ->
+                items(
+                    items = sortedFiles,
+                    key = { file -> file.path } // 使用stable key提高性能
+                ) { file ->
                     EnhancedVideoGridItem(
                         file = file,
                         showThumbnail = showThumbnails,
@@ -99,6 +159,19 @@ fun EnhancedVideoList(
                         onLongClick = { onFileLongClick(file) },
                         onAddToPlaylist = { onAddToPlaylist(file) }
                     )
+                }
+                
+                // 加载更多指示器
+                if (isLoadingMore) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        }
+                    }
                 }
             }
         }
@@ -143,11 +216,14 @@ fun EnhancedVideoListItem(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(file.thumbnailPath)
                                 .crossfade(true)
+                                .memoryCacheKey(file.path) // 使用文件路径作为缓存键
+                                .diskCacheKey(file.path)
+                                .placeholder(ColorDrawable(androidx.compose.ui.graphics.Color.Gray.toArgb()))
+                                .error(ColorDrawable(androidx.compose.ui.graphics.Color.Red.toArgb()))
                                 .build(),
                             contentDescription = "视频缩略图",
-                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            error = painterResource(id = R.drawable.ic_video_file)
+                            modifier = Modifier.fillMaxSize()
                         )
                     } else {
                         Icon(
@@ -325,11 +401,14 @@ fun EnhancedVideoGridItem(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(file.thumbnailPath)
                             .crossfade(true)
+                            .memoryCacheKey(file.path) // 使用文件路径作为缓存键
+                            .diskCacheKey(file.path)  
+                            .placeholder(ColorDrawable(androidx.compose.ui.graphics.Color.Gray.toArgb()))
+                            .error(ColorDrawable(androidx.compose.ui.graphics.Color.Red.toArgb()))
                             .build(),
                         contentDescription = "视频缩略图",
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        error = painterResource(id = R.drawable.ic_video_file)
+                        contentScale = ContentScale.Crop
                     )
                 } else {
                     Icon(

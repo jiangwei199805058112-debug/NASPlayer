@@ -12,7 +12,8 @@ import javax.inject.Singleton
 @Singleton
 class SmbDataSource @Inject constructor(
     private val smbManager: SmbManager,
-    private val videoMetadataExtractor: VideoMetadataExtractor
+    private val videoMetadataExtractor: VideoMetadataExtractor,
+    private val metadataCache: com.example.nasonly.data.cache.MediaMetadataCache
 ) {
     companion object {
         private const val TAG = "SmbDataSource"
@@ -131,29 +132,58 @@ class SmbDataSource @Inject constructor(
                 
                 // 如果是视频文件且需要元数据
                 if (fileInfo.isVideoFile && includeMetadata) {
-                    try {
-                        val metadata = videoMetadataExtractor.extractMetadata(fileInfo.path)
-                        var thumbnailPath: String? = null
-                        
-                        // 生成缩略图
-                        if (generateThumbnails) {
-                            thumbnailPath = videoMetadataExtractor.generateThumbnail(fileInfo.path)
+                    // 首先检查缓存
+                    val cachedFile = metadataCache.getFileMetadata(fileInfo.path)
+                    if (cachedFile != null) {
+                        enhancedFile = cachedFile
+                        Log.d(TAG, "Using cached metadata for: ${fileInfo.path}")
+                    } else {
+                        // 检查是否正在处理中
+                        if (!metadataCache.isProcessing(fileInfo.path)) {
+                            // 标记为正在处理
+                            if (metadataCache.markProcessing(fileInfo.path)) {
+                                try {
+                                    val metadata = videoMetadataExtractor.extractMetadata(fileInfo.path)
+                                    var thumbnailPath: String? = null
+                                    
+                                    // 检查缩略图缓存
+                                    if (generateThumbnails) {
+                                        thumbnailPath = metadataCache.getThumbnailPath(fileInfo.path)
+                                        if (thumbnailPath == null) {
+                                            thumbnailPath = videoMetadataExtractor.generateThumbnail(fileInfo.path)
+                                            if (thumbnailPath != null) {
+                                                metadataCache.cacheThumbnailPath(fileInfo.path, thumbnailPath)
+                                            }
+                                        }
+                                    }
+                                    
+                                    enhancedFile = fileInfo.copy(
+                                        duration = metadata.duration,
+                                        thumbnailPath = thumbnailPath,
+                                        videoWidth = metadata.width,
+                                        videoHeight = metadata.height,
+                                        frameRate = metadata.frameRate,
+                                        bitrate = metadata.bitrate,
+                                        codecName = metadata.codecName,
+                                        audioChannels = metadata.audioChannels,
+                                        audioSampleRate = metadata.audioSampleRate
+                                    )
+                                    
+                                    // 缓存增强后的文件信息
+                                    metadataCache.cacheFileMetadata(fileInfo.path, enhancedFile)
+                                    
+                                } catch (e: Exception) {
+                                    Log.w(TAG, "Failed to extract metadata for ${fileInfo.path}", e)
+                                    // 使用原始文件信息
+                                } finally {
+                                    // 标记处理完成
+                                    metadataCache.markProcessed(fileInfo.path)
+                                }
+                            } else {
+                                // 如果正在处理中，使用原始文件信息
+                                Log.d(TAG, "File already processing: ${fileInfo.path}")
+                            }
                         }
-                        
-                        enhancedFile = fileInfo.copy(
-                            duration = metadata.duration,
-                            thumbnailPath = thumbnailPath,
-                            videoWidth = metadata.width,
-                            videoHeight = metadata.height,
-                            frameRate = metadata.frameRate,
-                            bitrate = metadata.bitrate,
-                            codecName = metadata.codecName,
-                            audioChannels = metadata.audioChannels,
-                            audioSampleRate = metadata.audioSampleRate
-                        )
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Failed to extract metadata for ${fileInfo.path}", e)
-                        // 使用原始文件信息
                     }
                 }
                 
