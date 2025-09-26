@@ -1,6 +1,3 @@
-在仓库中新建 `.github/workflows/ci-test.yml`
-写入以下内容：
-
 name: CI Test
 
 on:
@@ -12,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: self-hosted
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
