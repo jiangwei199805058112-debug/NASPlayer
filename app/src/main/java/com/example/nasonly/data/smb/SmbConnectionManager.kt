@@ -15,6 +15,12 @@ import com.hierynomus.smbj.share.DiskShare
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.mssmb2.SMBApiException
 import com.hierynomus.smbj.share.File as SmbFile
+import com.hierynomus.mssmb2.messages.SMB2CreateDisposition
+import com.hierynomus.mssmb2.messages.SMB2CreateOptions
+import com.hierynomus.mssmb2.messages.SMB2ShareAccess
+import com.hierynomus.mssmb2.messages.SMB2ImpersonationLevel
+import com.hierynomus.protocol.commons.enums.AccessMask
+import com.hierynomus.protocol.commons.enums.FileAttributes
 import java.io.IOException
 
 @Singleton
@@ -220,11 +226,12 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             
             // 使用 smbj 打开文件（只读）
             val smbFile: SmbFile = currentShare.openFile(
-                path,  
-                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_READ),
-                setOf(com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OPEN),
-                setOf(com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE),
-                setOf(com.hierynomus.mssmb2.SMB2ImpersonationLevel.Impersonation)
+                path,
+                setOf(AccessMask.GENERIC_READ),
+                setOf(FileAttributes.FILE_ATTRIBUTE_NORMAL),
+                setOf(SMB2ShareAccess.FILE_SHARE_READ),
+                SMB2CreateDisposition.FILE_OPEN,
+                setOf(SMB2CreateOptions.FILE_NON_DIRECTORY_FILE)
             )
             smbFile.inputStream
         } catch (e: SMBApiException) {
@@ -255,11 +262,12 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             
             // 使用 smbj 打开文件用于写入
             val smbFile: SmbFile = currentShare.openFile(
-                path,  
-                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_WRITE),
-                setOf(com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OPEN_IF),
-                setOf(com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE),
-                setOf(com.hierynomus.mssmb2.SMB2ImpersonationLevel.Impersonation)
+                path,
+                setOf(AccessMask.GENERIC_WRITE),
+                setOf(FileAttributes.FILE_ATTRIBUTE_NORMAL),
+                setOf(SMB2ShareAccess.FILE_SHARE_WRITE),
+                SMB2CreateDisposition.FILE_OPEN_IF,
+                setOf(SMB2CreateOptions.FILE_NON_DIRECTORY_FILE)
             )
             smbFile.outputStream
         } catch (e: SMBApiException) {
