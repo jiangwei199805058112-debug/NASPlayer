@@ -41,6 +41,14 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
+    
+    // 配置打包选项
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/versions/9/previous-compilation-data.bin"
+        }
+    }
 }
 
 dependencies {
@@ -87,4 +95,21 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+// 配置任务级别的内存设置
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        freeCompilerArgs += listOf(
+            "-opt-in=kotlin.RequiresOptIn",
+            "-Xjvm-default=all"
+        )
+    }
+}
+
+// 配置 dex 合并任务的内存
+afterEvaluate {
+    tasks.withType<com.android.build.gradle.internal.tasks.DexMergingTask>().configureEach {
+        jvmArgs = listOf("-Xmx4g", "-XX:+UseG1GC")
+    }
 }
