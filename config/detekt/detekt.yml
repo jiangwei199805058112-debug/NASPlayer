@@ -450,17 +450,14 @@ potential-bugs:
   MissingPackageDeclaration:
     active: false
     excludes: ['**/*.kts']
-  MissingWhenCase:
-    active: true
-    allowElseExpression: true
+
   NullCheckOnMutableProperty:
     active: false
   NullableToStringCall:
     active: false
   PropertyUsedBeforeDeclaration:
     active: false
-  RedundantElseInWhen:
-    active: true
+
   UnconditionalJumpStatementInLoop:
     active: false
   UnnecessaryNotNullOperator:
@@ -504,8 +501,7 @@ style:
     active: false
   CollapsibleIfStatements:
     active: false
-  DataClassContainsFunction:
-    active: false
+
   DataClassShouldBeImmutable:
     active: false
   DestructuringDeclarationWithTooManyEntries:
@@ -524,12 +520,13 @@ style:
     includeLineWrapping: false
   ForbiddenComment:
     active: true
-    values:
-      - 'FIXME:'
-      - 'STOPSHIP:'
-      - 'TODO:'
-    allowedPatterns: ''
-    customMessage: ''
+    comments:
+      - reason: 'Forbidden FIXME todo marker'
+        value: 'FIXME:'
+      - reason: 'Forbidden STOPSHIP todo marker'
+        value: 'STOPSHIP:'
+      - reason: 'Forbidden TODO todo marker'
+        value: 'TODO:'
   ForbiddenImport:
     active: false
     imports: []
@@ -539,12 +536,7 @@ style:
     methods:
       - 'kotlin.io.print'
       - 'kotlin.io.println'
-  ForbiddenPublicDataClass:
-    active: true
-    excludes: ['**']
-    ignorePackages:
-      - '*.internal'
-      - '*.internal.*'
+
   ForbiddenVoid:
     active: true
     ignoreOverridden: false
@@ -554,12 +546,7 @@ style:
     ignoreOverridableFunction: true
     ignoreActualFunction: true
     excludedFunctions: []
-  LibraryCodeMustSpecifyReturnType:
-    active: true
-    excludes: ['**']
-  LibraryEntitiesShouldNotBePublic:
-    active: false
-    excludes: ['**']
+
   LoopWithTooManyJumpStatements:
     active: true
     maxJumpCount: 1

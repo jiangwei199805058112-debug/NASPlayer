@@ -223,10 +223,10 @@ private fun MediaFilesTab(
                         onFileClick(media)
                     },
                     onFileLongClick = { _ ->
-                        // TODO: 显示文件详细信息对话框
+                        // FIXME: Feature not implemented - show file details dialog
                     },
                     onAddToPlaylist = { _ ->
-                        // TODO: 显示添加到播放列表对话框
+                        // FIXME: Feature not implemented - show add to playlist dialog
                     },
                     modifier = Modifier.fillMaxSize()
                 )

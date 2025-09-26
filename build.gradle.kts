@@ -13,7 +13,7 @@ detekt {
     config.setFrom("$projectDir/config/detekt/detekt.yml")
     buildUponDefaultConfig = true
     allRules = false
-    
+
     reports {
         html.required.set(true)
         xml.required.set(true)
@@ -32,7 +32,7 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     outputToConsole.set(true)
     outputColorName.set("RED")
     ignoreFailures.set(false)
-    
+
     reporters {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
