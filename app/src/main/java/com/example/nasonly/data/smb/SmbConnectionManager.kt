@@ -221,9 +221,11 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             // 使用 smbj 打开文件（只读）
             val smbFile: SmbFile = currentShare.openFile(
                 path,
-                com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OPEN,
-                com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE,
-                com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_READ
+                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_READ),
+                setOf(com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OPEN),
+                setOf(com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE),
+                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_READ),
+                null
             )
             smbFile.inputStream
         } catch (e: SMBApiException) {
@@ -255,9 +257,11 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             // 使用 smbj 打开文件用于写入
             val smbFile: SmbFile = currentShare.openFile(
                 path,
-                com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OVERWRITE_IF,
-                com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE,
-                com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_WRITE
+                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_WRITE),
+                setOf(com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OVERWRITE_IF),
+                setOf(com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE),
+                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_WRITE),
+                null
             )
             smbFile.outputStream
         } catch (e: SMBApiException) {

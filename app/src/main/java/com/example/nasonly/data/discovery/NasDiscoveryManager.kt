@@ -321,7 +321,7 @@ class NasDiscoveryManager @Inject constructor(
             
             // 等待所有扫描完成
             jobs.forEach { job ->
-                runCatching { job.await() }
+                runCatching { job.join() }
             }
             
         } catch (e: Exception) {
