@@ -218,9 +218,13 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                 return null
             }
             
-            // 使用 smbj 打开文件
-            val smbFile: SmbFile = currentShare.openFile(path)
-            
+            // 使用 smbj 打开文件（只读）
+            val smbFile: SmbFile = currentShare.openFile(
+                path,
+                com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OPEN,
+                com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE,
+                com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_READ
+            )
             smbFile.inputStream
         } catch (e: SMBApiException) {
             Log.e(TAG, "SMB API error opening file $path: ${e.message}", e)
@@ -248,9 +252,13 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                 return null
             }
             
-            // 使用 smbj 打开文件用于写入  
-            val smbFile: SmbFile = currentShare.openFile(path)
-            
+            // 使用 smbj 打开文件用于写入
+            val smbFile: SmbFile = currentShare.openFile(
+                path,
+                com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OVERWRITE_IF,
+                com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE,
+                com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_WRITE
+            )
             smbFile.outputStream
         } catch (e: SMBApiException) {
             Log.e(TAG, "SMB API error opening file for write $path: ${e.message}", e)
@@ -303,7 +311,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             currentShare.list(directoryPath).forEach { fileInfo ->
                 val fileName = fileInfo.fileName
                 val fileAttributes = fileInfo.fileAttributes
-                val isDirectory = fileAttributes and 0x10 != 0 // FILE_ATTRIBUTE_DIRECTORY
+                    val isDirectory = (fileAttributes and 0x10L) != 0L // FILE_ATTRIBUTE_DIRECTORY
                 val fileSize = if (isDirectory) 0L else fileInfo.endOfFile
                 val fullPath = if (path.isEmpty()) fileName else "$path/$fileName"
                 
