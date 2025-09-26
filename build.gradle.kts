@@ -9,8 +9,9 @@ plugins {
 
 // Configure detekt
 detekt {
-    toolVersion = "1.23.1"
+    toolVersion = "1.23.6"
     config.setFrom("$projectDir/config/detekt/detekt.yml")
+    baseline = project.file("$projectDir/config/detekt/baseline.xml")
     buildUponDefaultConfig = true
     allRules = false
 
@@ -18,7 +19,6 @@ detekt {
         html.required.set(true)
         xml.required.set(true)
         txt.required.set(true)
-        sarif.required.set(true)
         md.required.set(true)
     }
 }
@@ -36,10 +36,9 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     reporters {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
-        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.SARIF)
     }
 }
 
 dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.1")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6")
 }

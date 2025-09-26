@@ -16,36 +16,36 @@ import androidx.room.PrimaryKey
             entity = Playlist::class,
             parentColumns = ["id"],
             childColumns = ["playlist_id"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
         Index(value = ["playlist_id"]),
-        Index(value = ["video_path"])
-    ]
+        Index(value = ["video_path"]),
+    ],
 )
 data class PlaylistItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    
+
     @ColumnInfo(name = "playlist_id")
     val playlistId: Long,
-    
+
     @ColumnInfo(name = "video_path")
     val videoPath: String,
-    
+
     @ColumnInfo(name = "video_name")
     val videoName: String,
-    
+
     @ColumnInfo(name = "file_size")
     val fileSize: Long = 0,
-    
+
     @ColumnInfo(name = "duration")
     val duration: Long = 0,
-    
+
     @ColumnInfo(name = "order_index")
     val orderIndex: Int = 0,
-    
+
     @ColumnInfo(name = "added_at")
-    val addedAt: Long = System.currentTimeMillis()
+    val addedAt: Long = System.currentTimeMillis(),
 )

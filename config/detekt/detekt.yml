@@ -559,13 +559,13 @@ style:
       - '1'
       - '2'
     ignoreHashCodeFunction: true
-    ignorePropertyDeclaration: false
+    ignorePropertyDeclaration: true
     ignoreLocalVariableDeclaration: false
     ignoreConstantDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
-    ignoreAnnotation: false
+    ignoreAnnotation: true
     ignoreNamedArgument: true
-    ignoreEnums: false
+    ignoreEnums: true
     ignoreRanges: false
     ignoreExtensionFunctions: true
   MandatoryBracesLoops:
@@ -578,7 +578,7 @@ style:
     maxLineLength: 120
     excludePackageStatements: true
     excludeImportStatements: true
-    excludeCommentStatements: false
+    excludeCommentStatements: true
   MayBeConst:
     active: true
   ModifierOrder:
@@ -665,6 +665,7 @@ style:
   UnusedPrivateMember:
     active: true
     allowedNames: ''
+    ignoreAnnotated: ['Preview','Composable','Inject']
   UseAnyOrNoneInsteadOfFind:
     active: true
   UseArrayLiteralsInAnnotations:

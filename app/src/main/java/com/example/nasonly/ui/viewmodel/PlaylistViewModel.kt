@@ -15,31 +15,31 @@ import javax.inject.Inject
 
 data class PlaylistWithItems(
     val playlist: Playlist,
-    val items: List<PlaylistItem>
+    val items: List<PlaylistItem>,
 )
 
 @HiltViewModel
 class PlaylistViewModel @Inject constructor(
     private val playlistDao: PlaylistDao,
-    private val playlistItemDao: PlaylistItemDao
+    private val playlistItemDao: PlaylistItemDao,
 ) : ViewModel() {
-    
+
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
-    
+
     private val _currentPlaylistItems = MutableStateFlow<List<PlaylistItem>>(emptyList())
     val currentPlaylistItems: StateFlow<List<PlaylistItem>> = _currentPlaylistItems.asStateFlow()
-    
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
-    
+
     init {
         loadPlaylists()
     }
-    
+
     private fun loadPlaylists() {
         viewModelScope.launch {
             try {
@@ -54,14 +54,14 @@ class PlaylistViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun createPlaylist(name: String, description: String = "") {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
                 val playlist = Playlist(
                     name = name,
-                    description = description
+                    description = description,
                 )
                 playlistDao.createPlaylistWithCount(playlist)
                 _error.value = null
@@ -72,7 +72,7 @@ class PlaylistViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun updatePlaylist(playlist: Playlist) {
         viewModelScope.launch {
             try {
@@ -87,7 +87,7 @@ class PlaylistViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun deletePlaylist(playlist: Playlist) {
         viewModelScope.launch {
             try {
@@ -101,7 +101,7 @@ class PlaylistViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun loadPlaylistItems(playlistId: Long) {
         viewModelScope.launch {
             try {
@@ -113,7 +113,7 @@ class PlaylistViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun addItemToPlaylist(playlistId: Long, videoPath: String, videoName: String, fileSize: Long = 0, duration: Long = 0) {
         viewModelScope.launch {
             try {
@@ -125,7 +125,7 @@ class PlaylistViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun removeItemFromPlaylist(item: PlaylistItem) {
         viewModelScope.launch {
             try {
@@ -137,7 +137,7 @@ class PlaylistViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun reorderPlaylistItems(playlistId: Long, itemIds: List<Long>) {
         viewModelScope.launch {
             try {
@@ -148,7 +148,7 @@ class PlaylistViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun clearError() {
         _error.value = null
     }

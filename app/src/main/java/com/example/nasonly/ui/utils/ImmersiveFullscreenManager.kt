@@ -12,7 +12,7 @@ import androidx.core.view.WindowInsetsCompat
  * 用于播放器页面的全屏沉浸式显示
  */
 object ImmersiveFullscreenManager {
-    
+
     /**
      * 进入全屏沉浸模式
      * - 隐藏状态栏和导航栏
@@ -20,7 +20,7 @@ object ImmersiveFullscreenManager {
      */
     fun enterFullscreen(activity: Activity) {
         WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             activity.window.insetsController?.let { controller ->
                 controller.hide(WindowInsetsCompat.Type.systemBars())
@@ -30,15 +30,15 @@ object ImmersiveFullscreenManager {
             @Suppress("DEPRECATION")
             activity.window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-            )
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                )
         }
     }
-    
+
     /**
      * 退出全屏模式
      * - 显示状态栏和导航栏
@@ -46,7 +46,7 @@ object ImmersiveFullscreenManager {
      */
     fun exitFullscreen(activity: Activity) {
         WindowCompat.setDecorFitsSystemWindows(activity.window, true)
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             activity.window.insetsController?.show(WindowInsetsCompat.Type.systemBars())
         } else {
@@ -54,7 +54,7 @@ object ImmersiveFullscreenManager {
             activity.window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         }
     }
-    
+
     /**
      * 切换全屏模式
      */

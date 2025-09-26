@@ -7,7 +7,6 @@ import android.os.StrictMode
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
@@ -18,9 +17,9 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    
+
     private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
+        ActivityResultContracts.RequestPermission(),
     ) { isGranted: Boolean ->
         if (isGranted) {
             // Notification permission granted
@@ -28,10 +27,10 @@ class MainActivity : ComponentActivity() {
             // Notification permission denied
         }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // 在调试模式下放开StrictMode网络限制，方便开发调试
         // 生产环境不能在主线程访问网络，必须使用协程的IO线程
         try {
@@ -46,28 +45,28 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             // 忽略StrictMode配置错误
         }
-        
+
         // Request notification permission for Android 13+
         requestNotificationPermission()
-        
+
         setContent {
             NASPlayerTheme {
                 Surface {
                     val navController = rememberNavController()
                     NavGraph(
                         startDestination = Routes.NAS_DISCOVERY,
-                        navController = navController
+                        navController = navController,
                     )
                 }
             }
         }
     }
-    
+
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
-                    android.Manifest.permission.POST_NOTIFICATIONS
+                    android.Manifest.permission.POST_NOTIFICATIONS,
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)

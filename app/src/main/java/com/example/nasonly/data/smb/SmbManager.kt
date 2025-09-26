@@ -1,8 +1,8 @@
 package com.example.nasonly.data.smb
 
+import java.io.Closeable
 import java.io.InputStream
 import java.io.OutputStream
-import java.io.Closeable
 
 interface SmbManager : Closeable {
     fun connect(): Boolean

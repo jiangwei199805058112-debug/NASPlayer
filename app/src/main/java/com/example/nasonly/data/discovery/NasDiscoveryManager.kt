@@ -9,7 +9,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import java.io.IOException
 import java.net.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,7 +19,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class NasDiscoveryManager @Inject constructor(
-    private val context: Context
+    private val context: Context,
 ) {
     companion object {
         private const val TAG = "NasDiscoveryManager"
@@ -34,7 +33,7 @@ class NasDiscoveryManager @Inject constructor(
 
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
-    
+
     // 存储发现到的设备
     private val discoveredDevices = mutableSetOf<DeviceInfo>()
     private var discoveryJob: Job? = null
@@ -44,29 +43,28 @@ class NasDiscoveryManager @Inject constructor(
      */
     fun startDiscovery(): Flow<List<DeviceInfo>> = flow {
         discoveredDevices.clear()
-        
+
         try {
             Log.d(TAG, "Starting NAS discovery with multiple protocols")
-            
+
             // 并行执行多种发现方法
             coroutineScope {
                 val jobs = listOf(
                     async { discoverViaMdns() },
                     async { discoverViaSsdp() },
                     async { discoverViaWsDiscovery() },
-                    async { discoverViaSubnetScan() }
+                    async { discoverViaSubnetScan() },
                 )
-                
+
                 // 等待一段时间让发现结果累积
                 delay(DISCOVERY_TIMEOUT)
-                
+
                 // 取消所有发现任务
                 jobs.forEach { it.cancel() }
             }
-            
+
             Log.d(TAG, "Discovery completed, found ${discoveredDevices.size} devices")
             emit(discoveredDevices.toList())
-            
         } catch (e: Exception) {
             Log.e(TAG, "Error during discovery: ${e.message}", e)
             emit(discoveredDevices.toList())
@@ -79,9 +77,9 @@ class NasDiscoveryManager @Inject constructor(
     private suspend fun discoverViaMdns() = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "Starting mDNS discovery for SMB services")
-            
+
             val channel = Channel<DeviceInfo>(Channel.UNLIMITED)
-            
+
             val discoveryListener = object : NsdManager.DiscoveryListener {
                 override fun onStartDiscoveryFailed(serviceType: String?, errorCode: Int) {
                     Log.e(TAG, "mDNS discovery start failed: $errorCode")
@@ -112,7 +110,7 @@ class NasDiscoveryManager @Inject constructor(
             }
 
             nsdManager.discoverServices(SMB_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
-            
+
             // 收集发现的设备
             try {
                 withTimeout(DISCOVERY_TIMEOUT) {
@@ -125,9 +123,8 @@ class NasDiscoveryManager @Inject constructor(
             } catch (e: TimeoutCancellationException) {
                 Log.d(TAG, "mDNS discovery timeout")
             }
-            
+
             nsdManager.stopServiceDiscovery(discoveryListener)
-            
         } catch (e: Exception) {
             Log.e(TAG, "mDNS discovery error: ${e.message}", e)
         }
@@ -147,13 +144,13 @@ class NasDiscoveryManager @Inject constructor(
                     val device = DeviceInfo(
                         name = info.serviceName,
                         ip = info.host?.hostAddress ?: "",
-                        protocol = "mDNS"
+                        protocol = "mDNS",
                     )
                     channel.trySend(device)
                 }
             }
         }
-        
+
         nsdManager.resolveService(serviceInfo, resolveListener)
     }
 
@@ -163,45 +160,45 @@ class NasDiscoveryManager @Inject constructor(
     private suspend fun discoverViaSsdp() = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "Starting SSDP discovery")
-            
+
             val ssdpMessage = "M-SEARCH * HTTP/1.1\r\n" +
-                    "HOST: 239.255.255.250:1900\r\n" +
-                    "MAN: \"ssdp:discover\"\r\n" +
-                    "ST: upnp:rootdevice\r\n" +
-                    "MX: 3\r\n\r\n"
+                "HOST: 239.255.255.250:1900\r\n" +
+                "MAN: \"ssdp:discover\"\r\n" +
+                "ST: upnp:rootdevice\r\n" +
+                "MX: 3\r\n\r\n"
 
             val socket = DatagramSocket()
             socket.soTimeout = 5000
-            
+
             val group = InetAddress.getByName("239.255.255.250")
             val packet = DatagramPacket(
                 ssdpMessage.toByteArray(),
                 ssdpMessage.length,
                 group,
-                SSDP_PORT
+                SSDP_PORT,
             )
-            
+
             socket.send(packet)
-            
+
             // 监听响应
             val buffer = ByteArray(1024)
             val startTime = System.currentTimeMillis()
-            
+
             while (System.currentTimeMillis() - startTime < 5000) {
                 try {
                     val responsePacket = DatagramPacket(buffer, buffer.size)
                     socket.receive(responsePacket)
-                    
+
                     val response = String(responsePacket.data, 0, responsePacket.length)
                     val deviceIp = responsePacket.address.hostAddress
-                    
+
                     if (response.contains("SERVER:") && deviceIp != null) {
                         // 检查是否支持SMB
                         if (checkSmbPort(deviceIp)) {
                             val device = DeviceInfo(
                                 name = "UPnP Device",
                                 ip = deviceIp,
-                                protocol = "SSDP"
+                                protocol = "SSDP",
                             )
                             discoveredDevices.add(device)
                             Log.d(TAG, "Added SSDP device: ${device.name} (${device.ip})")
@@ -211,9 +208,8 @@ class NasDiscoveryManager @Inject constructor(
                     // 正常超时，继续
                 }
             }
-            
+
             socket.close()
-            
         } catch (e: Exception) {
             Log.e(TAG, "SSDP discovery error: ${e.message}", e)
         }
@@ -225,7 +221,7 @@ class NasDiscoveryManager @Inject constructor(
     private suspend fun discoverViaWsDiscovery() = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "Starting WS-Discovery")
-            
+
             val wsDiscoveryMessage = """
                 <?xml version="1.0" encoding="utf-8"?>
                 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:wsd="http://schemas.xmlsoap.org/ws/2005/04/discovery">
@@ -242,33 +238,33 @@ class NasDiscoveryManager @Inject constructor(
 
             val socket = DatagramSocket()
             socket.soTimeout = 3000
-            
+
             val group = InetAddress.getByName("239.255.255.250")
             val packet = DatagramPacket(
                 wsDiscoveryMessage.toByteArray(),
                 wsDiscoveryMessage.length,
                 group,
-                WS_DISCOVERY_PORT
+                WS_DISCOVERY_PORT,
             )
-            
+
             socket.send(packet)
-            
+
             // 监听响应
             val buffer = ByteArray(2048)
             val startTime = System.currentTimeMillis()
-            
+
             while (System.currentTimeMillis() - startTime < 3000) {
                 try {
                     val responsePacket = DatagramPacket(buffer, buffer.size)
                     socket.receive(responsePacket)
-                    
+
                     val deviceIp = responsePacket.address.hostAddress
-                    
+
                     if (deviceIp != null && checkSmbPort(deviceIp)) {
                         val device = DeviceInfo(
                             name = "WS-Discovery Device",
                             ip = deviceIp,
-                            protocol = "WS-Discovery"
+                            protocol = "WS-Discovery",
                         )
                         discoveredDevices.add(device)
                         Log.d(TAG, "Added WS-Discovery device: ${device.name} (${device.ip})")
@@ -277,9 +273,8 @@ class NasDiscoveryManager @Inject constructor(
                     // 正常超时，继续
                 }
             }
-            
+
             socket.close()
-            
         } catch (e: Exception) {
             Log.e(TAG, "WS-Discovery error: ${e.message}", e)
         }
@@ -291,18 +286,18 @@ class NasDiscoveryManager @Inject constructor(
     private suspend fun discoverViaSubnetScan() = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "Starting subnet scan discovery")
-            
+
             val subnet = getCurrentSubnet()
             if (subnet == null) {
                 Log.w(TAG, "Cannot determine current subnet")
                 return@withContext
             }
-            
+
             Log.d(TAG, "Scanning subnet: $subnet")
-            
+
             // 并行扫描子网中的IP地址
             val jobs = mutableListOf<Job>()
-            
+
             for (i in 1..254) {
                 val job = async {
                     val ip = "$subnet.$i"
@@ -310,7 +305,7 @@ class NasDiscoveryManager @Inject constructor(
                         val device = DeviceInfo(
                             name = "SMB Server",
                             ip = ip,
-                            protocol = "Subnet Scan"
+                            protocol = "Subnet Scan",
                         )
                         discoveredDevices.add(device)
                         Log.d(TAG, "Added subnet scan device: ${device.name} (${device.ip})")
@@ -318,12 +313,11 @@ class NasDiscoveryManager @Inject constructor(
                 }
                 jobs.add(job)
             }
-            
+
             // 等待所有扫描完成
             jobs.forEach { job ->
                 runCatching { job.join() }
             }
-            
         } catch (e: Exception) {
             Log.e(TAG, "Subnet scan error: ${e.message}", e)
         }
@@ -336,16 +330,16 @@ class NasDiscoveryManager @Inject constructor(
         try {
             val wifiInfo = wifiManager.connectionInfo
             val ipAddress = wifiInfo.ipAddress
-            
+
             if (ipAddress == 0) return null
-            
+
             val ip = String.format(
                 "%d.%d.%d",
                 ipAddress and 0xff,
                 ipAddress shr 8 and 0xff,
-                ipAddress shr 16 and 0xff
+                ipAddress shr 16 and 0xff,
             )
-            
+
             return ip
         } catch (e: Exception) {
             Log.e(TAG, "Error getting current subnet: ${e.message}", e)
@@ -395,5 +389,5 @@ class NasDiscoveryManager @Inject constructor(
 data class DeviceInfo(
     val name: String,
     val ip: String,
-    val protocol: String
+    val protocol: String,
 )

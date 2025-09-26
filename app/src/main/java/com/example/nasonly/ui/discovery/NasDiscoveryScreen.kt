@@ -21,7 +21,7 @@ import com.example.nasonly.data.discovery.DeviceInfo
 @Composable
 fun NasDiscoveryScreen(
     viewModel: NasDiscoveryViewModel = hiltViewModel(),
-    @Suppress("UNUSED_PARAMETER") onDeviceConnected: (DeviceInfo) -> Unit = {}
+    @Suppress("UNUSED_PARAMETER") onDeviceConnected: (DeviceInfo) -> Unit = {},
 ) {
     val state by viewModel.discoveryState.collectAsState()
     var showConnectionDialog by remember { mutableStateOf<DeviceInfo?>(null) }
@@ -29,34 +29,34 @@ fun NasDiscoveryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         // 标题和发现按钮
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "NAS 设备发现",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
-            
+
             Button(
-                onClick = { 
+                onClick = {
                     if (state.isDiscovering) {
                         viewModel.stopDiscovery()
                     } else {
                         viewModel.startDiscovery()
                     }
                 },
-                enabled = !state.isConnecting
+                enabled = !state.isConnecting,
             ) {
                 Icon(
                     imageVector = if (state.isDiscovering) Icons.Default.Settings else Icons.Default.Search,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(16.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(if (state.isDiscovering) "停止发现" else "开始发现")
@@ -69,35 +69,35 @@ fun NasDiscoveryScreen(
         state.connectedDevice?.let { device ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         imageVector = Icons.Default.NetworkCheck,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "已连接到: ${device.name}",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
                         )
                         Text(
                             text = "IP: ${device.ip} (${device.protocol})",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     Button(
                         onClick = { viewModel.disconnect() },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     ) {
                         Text("断开")
                     }
@@ -110,12 +110,12 @@ fun NasDiscoveryScreen(
         state.error?.let { error ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
             ) {
                 Text(
                     text = error,
                     modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -128,7 +128,7 @@ fun NasDiscoveryScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                     Spacer(modifier = Modifier.width(12.dp))
@@ -143,19 +143,19 @@ fun NasDiscoveryScreen(
             Text(
                 text = "发现的设备 (${state.devices.size})",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
 
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(state.devices) { device ->
                 DeviceCard(
                     device = device,
                     isConnecting = state.isConnecting,
-                    onConnect = { showConnectionDialog = device }
+                    onConnect = { showConnectionDialog = device },
                 )
             }
         }
@@ -169,7 +169,7 @@ fun NasDiscoveryScreen(
                 viewModel.connectToDevice(device, username, password)
                 showConnectionDialog = null
             },
-            onDismiss = { showConnectionDialog = null }
+            onDismiss = { showConnectionDialog = null },
         )
     }
 }
@@ -179,40 +179,40 @@ fun NasDiscoveryScreen(
 private fun DeviceCard(
     device: DeviceInfo,
     isConnecting: Boolean,
-    onConnect: () -> Unit
+    onConnect: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        onClick = { if (!isConnecting) onConnect() }
+        onClick = { if (!isConnecting) onConnect() },
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = Icons.Default.Settings,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = device.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
                 Text(
                     text = "IP: ${device.ip}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = "发现方式: ${device.protocol}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             if (isConnecting) {
@@ -227,7 +227,7 @@ private fun DeviceCard(
 private fun ConnectionDialog(
     device: DeviceInfo,
     onConnect: (String, String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -241,31 +241,31 @@ private fun ConnectionDialog(
             Column {
                 Text(
                     text = "请输入SMB连接凭据",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
                     label = { Text("用户名") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("密码") },
                     visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = { onConnect(username, password) },
-                enabled = username.isNotBlank() && password.isNotBlank()
+                enabled = username.isNotBlank() && password.isNotBlank(),
             ) {
                 Text("连接")
             }
@@ -274,6 +274,6 @@ private fun ConnectionDialog(
             TextButton(onClick = onDismiss) {
                 Text("取消")
             }
-        }
+        },
     )
 }

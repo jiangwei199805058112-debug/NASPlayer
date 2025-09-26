@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class NasConfigViewModel @Inject constructor(
     private val nasPrefs: NasPrefs,
-    private val smbRepository: SmbRepository
+    private val smbRepository: SmbRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NasConfigUiState())
     val uiState: StateFlow<NasConfigUiState> = _uiState
@@ -27,7 +27,7 @@ class NasConfigViewModel @Inject constructor(
                     username = config.username,
                     password = config.password,
                     domain = config.domain,
-                    smbVersion = config.smbVersion
+                    smbVersion = config.smbVersion,
                 )
             }
         }
@@ -39,26 +39,26 @@ class NasConfigViewModel @Inject constructor(
         username: String,
         password: String,
         domain: String,
-        smbVersion: String
+        smbVersion: String,
     ) {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                
+
                 // 保存到 DataStore
                 nasPrefs.save(host, share, username, password, domain, smbVersion)
-                
+
                 // 配置 SMB 连接
                 smbRepository.configureConnection(host, share, username, password, domain)
-                
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    testResult = "配置已保存"
+                    testResult = "配置已保存",
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "保存配置失败: ${e.message}"
+                    error = "保存配置失败: ${e.message}",
                 )
             }
         }
@@ -70,37 +70,37 @@ class NasConfigViewModel @Inject constructor(
         username: String,
         password: String,
         domain: String,
-        @Suppress("UNUSED_PARAMETER") smbVersion: String
+        @Suppress("UNUSED_PARAMETER") smbVersion: String,
     ) {
         // 使用viewModelScope.launch确保网络操作在协程中执行
         // 生产环境不能在主线程访问网络，必须使用协程的IO线程
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null, testResult = null)
-                
+
                 // 配置连接 - 在IO线程中执行
                 smbRepository.configureConnection(host, share, username, password, domain)
-                
+
                 // 测试连接 - 内部会切换到IO线程执行网络操作
                 val result = smbRepository.testConnection()
                 result.fold(
                     onSuccess = { message ->
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            testResult = message
+                            testResult = message,
                         )
                     },
                     onFailure = { error ->
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = error.message ?: "连接测试失败"
+                            error = error.message ?: "连接测试失败",
                         )
-                    }
+                    },
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "连接测试异常: ${e.message}"
+                    error = "连接测试异常: ${e.message}",
                 )
             }
         }
@@ -120,5 +120,5 @@ data class NasConfigUiState(
     val smbVersion: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val testResult: String? = null
+    val testResult: String? = null,
 )

@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NasDiscoveryViewModel @Inject constructor(
-    private val nasRepository: NasRepository
+    private val nasRepository: NasRepository,
 ) : ViewModel() {
 
     private val _discoveryState = MutableStateFlow(DiscoveryState())
@@ -24,13 +24,13 @@ class NasDiscoveryViewModel @Inject constructor(
      */
     fun startDiscovery() {
         _discoveryState.value = _discoveryState.value.copy(isDiscovering = true, devices = emptyList())
-        
+
         viewModelScope.launch {
             nasRepository.discoverNasDevices().collect { devices ->
                 _discoveryState.value = _discoveryState.value.copy(
                     isDiscovering = false,
                     devices = devices,
-                    error = null
+                    error = null,
                 )
             }
         }
@@ -41,7 +41,7 @@ class NasDiscoveryViewModel @Inject constructor(
      */
     fun connectToDevice(device: DeviceInfo, username: String, password: String) {
         _discoveryState.value = _discoveryState.value.copy(isConnecting = true, error = null)
-        
+
         viewModelScope.launch {
             try {
                 val success = nasRepository.connectToNas(device, username, password)
@@ -49,18 +49,18 @@ class NasDiscoveryViewModel @Inject constructor(
                     _discoveryState.value = _discoveryState.value.copy(
                         isConnecting = false,
                         connectedDevice = device,
-                        error = null
+                        error = null,
                     )
                 } else {
                     _discoveryState.value = _discoveryState.value.copy(
                         isConnecting = false,
-                        error = "连接失败：用户名或密码错误"
+                        error = "连接失败：用户名或密码错误",
                     )
                 }
             } catch (e: Exception) {
                 _discoveryState.value = _discoveryState.value.copy(
                     isConnecting = false,
-                    error = "连接失败：${e.message}"
+                    error = "连接失败：${e.message}",
                 )
             }
         }
@@ -98,5 +98,5 @@ data class DiscoveryState(
     val isConnecting: Boolean = false,
     val devices: List<DeviceInfo> = emptyList(),
     val connectedDevice: DeviceInfo? = null,
-    val error: String? = null
+    val error: String? = null,
 )

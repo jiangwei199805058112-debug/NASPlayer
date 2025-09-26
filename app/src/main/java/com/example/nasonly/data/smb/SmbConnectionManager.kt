@@ -1,27 +1,26 @@
 package com.example.nasonly.data.smb
 
 import android.util.Log
+import com.hierynomus.msdtyp.AccessMask
+import com.hierynomus.msfscc.FileAttributes
+import com.hierynomus.mssmb2.SMB2CreateDisposition
+import com.hierynomus.mssmb2.SMB2CreateOptions
+import com.hierynomus.mssmb2.SMB2ShareAccess
+import com.hierynomus.mssmb2.SMBApiException
+import com.hierynomus.smbj.SMBClient
+import com.hierynomus.smbj.auth.AuthenticationContext
+import com.hierynomus.smbj.connection.Connection
+import com.hierynomus.smbj.session.Session
+import com.hierynomus.smbj.share.DiskShare
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.hierynomus.smbj.SMBClient
-import com.hierynomus.smbj.connection.Connection
-import com.hierynomus.smbj.session.Session
-import com.hierynomus.smbj.share.DiskShare
-import com.hierynomus.smbj.auth.AuthenticationContext
-import com.hierynomus.mssmb2.SMBApiException
 import com.hierynomus.smbj.share.File as SmbFile
-import com.hierynomus.mssmb2.SMB2CreateDisposition
-import com.hierynomus.mssmb2.SMB2CreateOptions
-import com.hierynomus.mssmb2.SMB2ShareAccess
-import com.hierynomus.mssmb2.SMB2ImpersonationLevel
-import com.hierynomus.msdtyp.AccessMask
-import com.hierynomus.msfscc.FileAttributes
-import java.io.IOException
 
 @Singleton
 class SmbConnectionManager @Inject constructor() : SmbManager {
@@ -37,7 +36,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
     private var username: String = ""
     private var password: String = ""
     private var domain: String = ""
-    
+
     // smbj 连接对象
     private var smbClient: SMBClient? = null
     private var connection: Connection? = null
@@ -65,25 +64,25 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             disconnectAsync() // 确保先断开之前的连接
 
             Log.d(TAG, "Attempting to connect to SMB server: $host using smbj")
-            
+
             // 使用 smbj 建立真实的 SMB 连接
             smbClient = SMBClient()
             connection = smbClient?.connect(host)
-            
+
             if (connection == null) {
                 Log.e(TAG, "Failed to create SMB connection")
                 return@withContext false
             }
-            
+
             // 创建认证上下文
             val authContext = AuthenticationContext(username, password.toCharArray(), domain.ifEmpty { null })
             session = connection?.authenticate(authContext)
-            
+
             if (session == null) {
                 Log.e(TAG, "SMB authentication failed")
                 return@withContext false
             }
-            
+
             // 连接到共享
             if (share.isNotEmpty()) {
                 diskShare = session?.connectShare(share) as? DiskShare
@@ -91,7 +90,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                     Log.w(TAG, "Failed to connect to share: $share, but SMB session is valid")
                 }
             }
-            
+
             isConnected.set(true)
             Log.i(TAG, "SMB connection established successfully with smbj")
             true
@@ -123,25 +122,25 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             disconnect() // 确保先断开之前的连接
 
             Log.d(TAG, "Attempting to connect to SMB server: $host using smbj (sync)")
-            
+
             // 使用 smbj 建立真实的 SMB 连接（同步版本）
             smbClient = SMBClient()
             connection = smbClient?.connect(host)
-            
+
             if (connection == null) {
                 Log.e(TAG, "Failed to create SMB connection")
                 return false
             }
-            
+
             // 创建认证上下文
             val authContext = AuthenticationContext(username, password.toCharArray(), domain.ifEmpty { null })
             session = connection?.authenticate(authContext)
-            
+
             if (session == null) {
                 Log.e(TAG, "SMB authentication failed")
                 return false
             }
-            
+
             // 连接到共享
             if (share.isNotEmpty()) {
                 diskShare = session?.connectShare(share) as? DiskShare
@@ -149,7 +148,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                     Log.w(TAG, "Failed to connect to share: $share, but SMB session is valid")
                 }
             }
-            
+
             isConnected.set(true)
             Log.i(TAG, "SMB connection established successfully with smbj (sync)")
             true
@@ -175,7 +174,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             session?.close()
             connection?.close()
             smbClient?.close()
-            
+
             diskShare = null
             session = null
             connection = null
@@ -193,7 +192,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             session?.close()
             connection?.close()
             smbClient?.close()
-            
+
             diskShare = null
             session = null
             connection = null
@@ -217,13 +216,13 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
 
         return try {
             Log.d(TAG, "Opening input stream for path: $path using smbj")
-            
+
             val currentShare = diskShare
             if (currentShare == null) {
                 Log.e(TAG, "No disk share available for path: $path")
                 return null
             }
-            
+
             // 使用 smbj 打开文件（只读）
             val smbFile: SmbFile = currentShare.openFile(
                 path,
@@ -231,7 +230,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                 setOf(FileAttributes.FILE_ATTRIBUTE_NORMAL),
                 setOf(SMB2ShareAccess.FILE_SHARE_READ),
                 SMB2CreateDisposition.FILE_OPEN,
-                setOf(SMB2CreateOptions.FILE_NON_DIRECTORY_FILE)
+                setOf(SMB2CreateOptions.FILE_NON_DIRECTORY_FILE),
             )
             smbFile.inputStream
         } catch (e: SMBApiException) {
@@ -253,13 +252,13 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
 
         return try {
             Log.d(TAG, "Opening output stream for path: $path using smbj")
-            
+
             val currentShare = diskShare
             if (currentShare == null) {
                 Log.e(TAG, "No disk share available for path: $path")
                 return null
             }
-            
+
             // 使用 smbj 打开文件用于写入
             val smbFile: SmbFile = currentShare.openFile(
                 path,
@@ -267,7 +266,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                 setOf(FileAttributes.FILE_ATTRIBUTE_NORMAL),
                 setOf(SMB2ShareAccess.FILE_SHARE_WRITE),
                 SMB2CreateDisposition.FILE_OPEN_IF,
-                setOf(SMB2CreateOptions.FILE_NON_DIRECTORY_FILE)
+                setOf(SMB2CreateOptions.FILE_NON_DIRECTORY_FILE),
             )
             smbFile.outputStream
         } catch (e: SMBApiException) {
@@ -314,23 +313,23 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             }
 
             Log.d(TAG, "Listing directory: $path using smbj")
-            
+
             val files = mutableListOf<SmbFileInfo>()
             val directoryPath = if (path.isEmpty()) "*" else "$path/*"
-            
+
             currentShare.list(directoryPath).forEach { fileInfo ->
                 val fileName = fileInfo.fileName
                 val fileAttributes = fileInfo.fileAttributes
-                    val isDirectory = (fileAttributes and 0x10L) != 0L // FILE_ATTRIBUTE_DIRECTORY
+                val isDirectory = (fileAttributes and 0x10L) != 0L // FILE_ATTRIBUTE_DIRECTORY
                 val fileSize = if (isDirectory) 0L else fileInfo.endOfFile
                 val fullPath = if (path.isEmpty()) fileName else "$path/$fileName"
-                
+
                 // 跳过 . 和 .. 目录
                 if (fileName != "." && fileName != "..") {
                     files.add(SmbFileInfo(fileName, fullPath, fileSize, isDirectory))
                 }
             }
-            
+
             Log.d(TAG, "Found ${files.size} files/directories in $path")
             files
         } catch (e: SMBApiException) {
@@ -349,7 +348,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
     suspend fun validateConnectionAsync(): SmbConnectionResult = withContext(Dispatchers.IO) {
         when {
             host.isEmpty() -> SmbConnectionResult.Error("主机地址不能为空")
-            username.isEmpty() -> SmbConnectionResult.Error("用户名不能为空") 
+            username.isEmpty() -> SmbConnectionResult.Error("用户名不能为空")
             password.isEmpty() -> SmbConnectionResult.Error("密码不能为空")
             else -> {
                 try {
@@ -369,7 +368,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
         // 保持原有API兼容性，但生产环境应使用validateConnectionAsync()
         return when {
             host.isEmpty() -> SmbConnectionResult.Error("主机地址不能为空")
-            username.isEmpty() -> SmbConnectionResult.Error("用户名不能为空") 
+            username.isEmpty() -> SmbConnectionResult.Error("用户名不能为空")
             password.isEmpty() -> SmbConnectionResult.Error("密码不能为空")
             else -> {
                 try {

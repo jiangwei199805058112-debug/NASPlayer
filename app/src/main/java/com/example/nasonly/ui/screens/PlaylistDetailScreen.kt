@@ -31,17 +31,17 @@ fun PlaylistDetailScreen(
     onNavigateBack: () -> Unit,
     onPlayVideo: (String) -> Unit,
     onAddVideos: () -> Unit,
-    playlistViewModel: PlaylistViewModel = hiltViewModel()
+    playlistViewModel: PlaylistViewModel = hiltViewModel(),
 ) {
     val playlistItems by playlistViewModel.currentPlaylistItems.collectAsState()
     val error by playlistViewModel.error.collectAsState()
-    
+
     LaunchedEffect(playlistId) {
         playlistViewModel.loadPlaylistItems(playlistId)
     }
-    
+
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) {
         // 顶部应用栏
         TopAppBar(
@@ -51,12 +51,12 @@ fun PlaylistDetailScreen(
                         text = playlistName,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = "${playlistItems.size} 个视频",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             },
@@ -69,9 +69,9 @@ fun PlaylistDetailScreen(
                 IconButton(onClick = onAddVideos) {
                     Icon(Icons.Default.Add, contentDescription = "添加视频")
                 }
-            }
+            },
         )
-        
+
         // 错误提示
         error?.let { errorMessage ->
             Card(
@@ -79,18 +79,18 @@ fun PlaylistDetailScreen(
                     .fillMaxWidth()
                     .padding(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
                 ),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
             ) {
                 Text(
                     text = errorMessage,
                     modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                 )
             }
         }
-        
+
         if (playlistItems.isEmpty()) {
             // 空状态
             Column(
@@ -98,21 +98,21 @@ fun PlaylistDetailScreen(
                     .fillMaxSize()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = "播放列表为空",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = "点击右上角的 + 按钮添加视频",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Button(onClick = onAddVideos) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
@@ -124,16 +124,16 @@ fun PlaylistDetailScreen(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 itemsIndexed(playlistItems) { index, item ->
                     PlaylistItemCard(
                         item = item,
                         index = index + 1,
                         onPlay = { onPlayVideo(item.videoPath) },
-                        onRemove = { 
+                        onRemove = {
                             playlistViewModel.removeItemFromPlaylist(item)
-                        }
+                        },
                     )
                 }
             }
@@ -147,99 +147,99 @@ fun PlaylistItemCard(
     item: PlaylistItem,
     index: Int,
     onPlay: () -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
 ) {
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()) }
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // 拖拽手柄
             Icon(
                 Icons.Default.DragHandle,
                 contentDescription = "拖拽",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             // 序号
             Text(
                 text = "$index",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.width(32.dp)
+                modifier = Modifier.width(32.dp),
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             // 视频信息
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Text(
                     text = item.videoName,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp),
                 ) {
                     if (item.fileSize > 0) {
                         Text(
                             text = formatFileSize(item.fileSize),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    
+
                     if (item.duration > 0) {
                         Text(
                             text = formatDuration(item.duration),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
-                
+
                 Text(
                     text = "添加于 ${dateFormat.format(Date(item.addedAt))}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 2.dp)
+                    modifier = Modifier.padding(top = 2.dp),
                 )
             }
-            
+
             // 操作按钮
             Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 IconButton(onClick = onPlay) {
                     Icon(
                         Icons.Default.PlayArrow,
                         contentDescription = "播放",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
                 IconButton(onClick = onRemove) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "移除",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
                     )
                 }
             }
@@ -262,7 +262,7 @@ private fun formatDuration(milliseconds: Long): String {
     val hours = seconds / 3600
     val minutes = (seconds % 3600) / 60
     val secs = seconds % 60
-    
+
     return if (hours > 0) {
         "%d:%02d:%02d".format(hours, minutes, secs)
     } else {

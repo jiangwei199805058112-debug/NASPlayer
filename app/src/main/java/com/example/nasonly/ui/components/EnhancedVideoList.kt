@@ -50,7 +50,7 @@ fun EnhancedVideoList(
     onFileClick: (SmbFileInfo) -> Unit,
     onFileLongClick: (SmbFileInfo) -> Unit = {},
     onAddToPlaylist: (SmbFileInfo) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val sortedFiles = remember(files, sortOrder) {
         when (sortOrder) {
@@ -64,13 +64,13 @@ fun EnhancedVideoList(
             SortOrder.DURATION_DESC -> files.sortedByDescending { it.duration }
         }
     }
-    
+
     when (viewMode) {
         ViewMode.LIST -> {
             LazyColumn(
                 modifier = modifier,
                 contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(sortedFiles) { file ->
                     EnhancedVideoListItem(
@@ -78,7 +78,7 @@ fun EnhancedVideoList(
                         showThumbnail = showThumbnails,
                         onClick = { onFileClick(file) },
                         onLongClick = { onFileLongClick(file) },
-                        onAddToPlaylist = { onAddToPlaylist(file) }
+                        onAddToPlaylist = { onAddToPlaylist(file) },
                     )
                 }
             }
@@ -89,7 +89,7 @@ fun EnhancedVideoList(
                 modifier = modifier,
                 contentPadding = PaddingValues(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(sortedFiles) { file ->
                     EnhancedVideoGridItem(
@@ -97,7 +97,7 @@ fun EnhancedVideoList(
                         showThumbnail = showThumbnails,
                         onClick = { onFileClick(file) },
                         onLongClick = { onFileLongClick(file) },
-                        onAddToPlaylist = { onAddToPlaylist(file) }
+                        onAddToPlaylist = { onAddToPlaylist(file) },
                     )
                 }
             }
@@ -112,22 +112,22 @@ fun EnhancedVideoListItem(
     showThumbnail: Boolean = true,
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
-    onAddToPlaylist: () -> Unit = {}
+    onAddToPlaylist: () -> Unit = {},
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // 缩略图或文件图标
             if (showThumbnail && file.isVideoFile) {
@@ -136,7 +136,7 @@ fun EnhancedVideoListItem(
                         .size(80.dp, 60.dp)
                         .clip(RoundedCornerShape(6.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (file.thumbnailPath != null) {
                         AsyncImage(
@@ -147,17 +147,17 @@ fun EnhancedVideoListItem(
                             contentDescription = "视频缩略图",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            error = painterResource(id = R.drawable.ic_video_file)
+                            error = painterResource(id = R.drawable.ic_video_file),
                         )
                     } else {
                         Icon(
                             Icons.Default.VideoFile,
                             contentDescription = "视频文件",
                             modifier = Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    
+
                     // 时长标签
                     if (file.displayDuration.isNotEmpty()) {
                         Box(
@@ -165,14 +165,14 @@ fun EnhancedVideoListItem(
                                 .align(Alignment.BottomEnd)
                                 .background(
                                     Color.Black.copy(alpha = 0.7f),
-                                    RoundedCornerShape(4.dp)
+                                    RoundedCornerShape(4.dp),
                                 )
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .padding(horizontal = 4.dp, vertical = 2.dp),
                         ) {
                             Text(
                                 text = file.displayDuration,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White
+                                color = Color.White,
                             )
                         }
                     }
@@ -183,63 +183,63 @@ fun EnhancedVideoListItem(
                         .size(48.dp)
                         .clip(RoundedCornerShape(6.dp))
                         .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         if (file.isDirectory) Icons.Default.Folder else Icons.Default.VideoFile,
                         contentDescription = if (file.isDirectory) "文件夹" else "视频文件",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
             }
-            
+
             // 文件信息
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = file.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-                
+
                 if (file.isVideoFile) {
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         item {
                             if (file.resolution.isNotEmpty()) {
                                 VideoInfoChip(
                                     text = file.resolution,
-                                    icon = Icons.Default.AspectRatio
+                                    icon = Icons.Default.AspectRatio,
                                 )
                             }
                         }
-                        
+
                         item {
                             VideoInfoChip(
                                 text = file.displaySize,
-                                icon = Icons.Default.Storage
+                                icon = Icons.Default.Storage,
                             )
                         }
-                        
+
                         item {
                             if (file.displayBitrate.isNotEmpty()) {
                                 VideoInfoChip(
                                     text = file.displayBitrate,
-                                    icon = Icons.Default.Speed
+                                    icon = Icons.Default.Speed,
                                 )
                             }
                         }
-                        
+
                         item {
                             if (file.codecName != null) {
                                 VideoInfoChip(
                                     text = file.codecName,
-                                    icon = Icons.Default.Code
+                                    icon = Icons.Default.Code,
                                 )
                             }
                         }
@@ -248,20 +248,20 @@ fun EnhancedVideoListItem(
                     Text(
                         text = if (file.isDirectory) "文件夹" else file.displaySize,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            
+
             // 菜单按钮
             Box {
                 IconButton(onClick = { showMenu = true }) {
                     Icon(Icons.Default.MoreVert, contentDescription = "更多选项")
                 }
-                
+
                 DropdownMenu(
                     expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
+                    onDismissRequest = { showMenu = false },
                 ) {
                     if (file.isVideoFile) {
                         DropdownMenuItem(
@@ -272,10 +272,10 @@ fun EnhancedVideoListItem(
                             },
                             leadingIcon = {
                                 Icon(Icons.Default.PlaylistAdd, contentDescription = null)
-                            }
+                            },
                         )
                     }
-                    
+
                     DropdownMenuItem(
                         text = { Text("详细信息") },
                         onClick = {
@@ -284,7 +284,7 @@ fun EnhancedVideoListItem(
                         },
                         leadingIcon = {
                             Icon(Icons.Default.Info, contentDescription = null)
-                        }
+                        },
                     )
                 }
             }
@@ -299,17 +299,17 @@ fun EnhancedVideoGridItem(
     showThumbnail: Boolean = true,
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
-    onAddToPlaylist: () -> Unit = {}
+    onAddToPlaylist: () -> Unit = {},
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.75f)
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(8.dp),
     ) {
         Column {
             // 缩略图区域
@@ -318,7 +318,7 @@ fun EnhancedVideoGridItem(
                     .fillMaxWidth()
                     .weight(1f)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 if (showThumbnail && file.isVideoFile && file.thumbnailPath != null) {
                     AsyncImage(
@@ -329,17 +329,17 @@ fun EnhancedVideoGridItem(
                         contentDescription = "视频缩略图",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
-                        error = painterResource(id = R.drawable.ic_video_file)
+                        error = painterResource(id = R.drawable.ic_video_file),
                     )
                 } else {
                     Icon(
                         if (file.isDirectory) Icons.Default.Folder else Icons.Default.VideoFile,
                         contentDescription = if (file.isDirectory) "文件夹" else "视频文件",
                         modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                
+
                 // 时长标签
                 if (file.displayDuration.isNotEmpty()) {
                     Box(
@@ -348,23 +348,23 @@ fun EnhancedVideoGridItem(
                             .padding(8.dp)
                             .background(
                                 Color.Black.copy(alpha = 0.7f),
-                                RoundedCornerShape(4.dp)
+                                RoundedCornerShape(4.dp),
                             )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
                         Text(
                             text = file.displayDuration,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White
+                            color = Color.White,
                         )
                     }
                 }
-                
+
                 // 菜单按钮
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(4.dp)
+                        .padding(4.dp),
                 ) {
                     IconButton(
                         onClick = { showMenu = true },
@@ -372,20 +372,20 @@ fun EnhancedVideoGridItem(
                             .size(32.dp)
                             .background(
                                 Color.Black.copy(alpha = 0.5f),
-                                RoundedCornerShape(16.dp)
-                            )
+                                RoundedCornerShape(16.dp),
+                            ),
                     ) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = "更多选项",
                             tint = Color.White,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(18.dp),
                         )
                     }
-                    
+
                     DropdownMenu(
                         expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
+                        onDismissRequest = { showMenu = false },
                     ) {
                         if (file.isVideoFile) {
                             DropdownMenuItem(
@@ -396,10 +396,10 @@ fun EnhancedVideoGridItem(
                                 },
                                 leadingIcon = {
                                     Icon(Icons.Default.PlaylistAdd, contentDescription = null)
-                                }
+                                },
                             )
                         }
-                        
+
                         DropdownMenuItem(
                             text = { Text("详细信息") },
                             onClick = {
@@ -408,55 +408,55 @@ fun EnhancedVideoGridItem(
                             },
                             leadingIcon = {
                                 Icon(Icons.Default.Info, contentDescription = null)
-                            }
+                            },
                         )
                     }
                 }
             }
-            
+
             // 文件信息区域
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = file.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-                
+
                 if (file.isVideoFile) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (file.resolution.isNotEmpty()) {
                             Text(
                                 text = file.resolution,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.primary,
                             )
                             Text(
                                 text = "•",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         Text(
                             text = file.displaySize,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 } else {
                     Text(
                         text = if (file.isDirectory) "文件夹" else file.displaySize,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -467,28 +467,28 @@ fun EnhancedVideoGridItem(
 @Composable
 fun VideoInfoChip(
     text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.height(24.dp)
+        modifier = Modifier.height(24.dp),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Icon(
                 icon,
                 contentDescription = null,
                 modifier = Modifier.size(12.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
             )
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
             )
         }
     }
@@ -503,27 +503,27 @@ fun VideoListToolbar(
     onViewModeChange: (ViewMode) -> Unit,
     onShowThumbnailsChange: (Boolean) -> Unit,
     onSearch: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var showSortMenu by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchActive by remember { mutableStateOf(false) }
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (isSearchActive) {
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { 
+                    onValueChange = {
                         searchQuery = it
                         onSearch(it)
                     },
@@ -531,34 +531,34 @@ fun VideoListToolbar(
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     trailingIcon = {
-                        IconButton(onClick = { 
+                        IconButton(onClick = {
                             isSearchActive = false
                             searchQuery = ""
                             onSearch("")
                         }) {
                             Icon(Icons.Default.Close, contentDescription = "关闭搜索")
                         }
-                    }
+                    },
                 )
             } else {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // 搜索按钮
                     IconButton(onClick = { isSearchActive = true }) {
                         Icon(Icons.Default.Search, contentDescription = "搜索")
                     }
-                    
+
                     // 排序按钮
                     Box {
                         IconButton(onClick = { showSortMenu = true }) {
                             Icon(Icons.Default.Sort, contentDescription = "排序")
                         }
-                        
+
                         DropdownMenu(
                             expanded = showSortMenu,
-                            onDismissRequest = { showSortMenu = false }
+                            onDismissRequest = { showSortMenu = false },
                         ) {
                             DropdownMenuItem(
                                 text = { Text("按名称 A-Z") },
@@ -566,7 +566,7 @@ fun VideoListToolbar(
                                     onSortOrderChange(SortOrder.NAME_ASC)
                                     showSortMenu = false
                                 },
-                                leadingIcon = { Icon(Icons.Default.SortByAlpha, contentDescription = null) }
+                                leadingIcon = { Icon(Icons.Default.SortByAlpha, contentDescription = null) },
                             )
                             DropdownMenuItem(
                                 text = { Text("按名称 Z-A") },
@@ -574,7 +574,7 @@ fun VideoListToolbar(
                                     onSortOrderChange(SortOrder.NAME_DESC)
                                     showSortMenu = false
                                 },
-                                leadingIcon = { Icon(Icons.Default.SortByAlpha, contentDescription = null) }
+                                leadingIcon = { Icon(Icons.Default.SortByAlpha, contentDescription = null) },
                             )
                             DropdownMenuItem(
                                 text = { Text("按大小 小-大") },
@@ -582,7 +582,7 @@ fun VideoListToolbar(
                                     onSortOrderChange(SortOrder.SIZE_ASC)
                                     showSortMenu = false
                                 },
-                                leadingIcon = { Icon(Icons.Default.Storage, contentDescription = null) }
+                                leadingIcon = { Icon(Icons.Default.Storage, contentDescription = null) },
                             )
                             DropdownMenuItem(
                                 text = { Text("按大小 大-小") },
@@ -590,7 +590,7 @@ fun VideoListToolbar(
                                     onSortOrderChange(SortOrder.SIZE_DESC)
                                     showSortMenu = false
                                 },
-                                leadingIcon = { Icon(Icons.Default.Storage, contentDescription = null) }
+                                leadingIcon = { Icon(Icons.Default.Storage, contentDescription = null) },
                             )
                             DropdownMenuItem(
                                 text = { Text("按时长 短-长") },
@@ -598,7 +598,7 @@ fun VideoListToolbar(
                                     onSortOrderChange(SortOrder.DURATION_ASC)
                                     showSortMenu = false
                                 },
-                                leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = null) }
+                                leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = null) },
                             )
                             DropdownMenuItem(
                                 text = { Text("按时长 长-短") },
@@ -606,33 +606,33 @@ fun VideoListToolbar(
                                     onSortOrderChange(SortOrder.DURATION_DESC)
                                     showSortMenu = false
                                 },
-                                leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = null) }
+                                leadingIcon = { Icon(Icons.Default.AccessTime, contentDescription = null) },
                             )
                         }
                     }
-                    
+
                     // 视图模式切换
                     IconButton(
-                        onClick = { 
+                        onClick = {
                             onViewModeChange(
-                                if (viewMode == ViewMode.LIST) ViewMode.GRID else ViewMode.LIST
+                                if (viewMode == ViewMode.LIST) ViewMode.GRID else ViewMode.LIST,
                             )
-                        }
+                        },
                     ) {
                         Icon(
                             if (viewMode == ViewMode.LIST) Icons.Default.GridView else Icons.Default.ViewList,
-                            contentDescription = "切换视图模式"
+                            contentDescription = "切换视图模式",
                         )
                     }
-                    
+
                     // 缩略图切换
                     IconButton(
-                        onClick = { onShowThumbnailsChange(!showThumbnails) }
+                        onClick = { onShowThumbnailsChange(!showThumbnails) },
                     ) {
                         Icon(
                             if (showThumbnails) Icons.Default.Image else Icons.Default.ImageNotSupported,
                             contentDescription = "切换缩略图显示",
-                            tint = if (showThumbnails) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (showThumbnails) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

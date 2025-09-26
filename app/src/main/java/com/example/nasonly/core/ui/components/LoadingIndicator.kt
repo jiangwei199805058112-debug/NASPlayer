@@ -10,14 +10,14 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoadingIndicator(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(48.dp)
+            modifier = Modifier.size(48.dp),
         )
     }
 }
