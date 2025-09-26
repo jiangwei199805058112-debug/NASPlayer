@@ -39,7 +39,43 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
         }
     }
 
+    // 生产环境不能在主线程访问网络，必须在IO线程中运行网络操作
+    suspend fun connectAsync(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            if (host.isEmpty() || username.isEmpty()) {
+                Log.w(TAG, "SMB configuration incomplete: host=$host, username=$username")
+                return@withContext false
+            }
+
+            disconnectAsync() // 确保先断开之前的连接
+
+            Log.d(TAG, "Attempting to connect to SMB server: $host")
+            
+            // 模拟 SMB 连接验证 - 在IO线程中执行网络操作
+            socket = Socket().apply {
+                soTimeout = DEFAULT_TIMEOUT
+                connect(InetSocketAddress(host, SMB_PORT), DEFAULT_TIMEOUT)
+            }
+            
+            // 这里应该实现真实的 SMB 协议握手
+            // 为了演示，我们简化为 socket 连接成功即认为 SMB 连接成功
+            isConnected.set(true)
+            Log.i(TAG, "SMB connection established successfully")
+            true
+        } catch (e: SocketTimeoutException) {
+            Log.e(TAG, "SMB connection timeout: ${e.message}")
+            isConnected.set(false)
+            false
+        } catch (e: Exception) {
+            Log.e(TAG, "SMB connection failed: ${e.message}", e)
+            isConnected.set(false)
+            false
+        }
+    }
+
     override fun connect(): Boolean {
+        // 为了保持原有API兼容性，保留同步方法但添加警告注释
+        // 生产环境不应使用此方法，应使用connectAsync()
         return try {
             if (host.isEmpty() || username.isEmpty()) {
                 Log.w(TAG, "SMB configuration incomplete: host=$host, username=$username")
@@ -69,6 +105,18 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             Log.e(TAG, "SMB connection failed: ${e.message}", e)
             isConnected.set(false)
             false
+        }
+    }
+
+    // 异步版本的断开连接方法，在IO线程中执行
+    suspend fun disconnectAsync() = withContext(Dispatchers.IO) {
+        try {
+            socket?.close()
+            socket = null
+            isConnected.set(false)
+            Log.d(TAG, "SMB connection disconnected")
+        } catch (e: Exception) {
+            Log.w(TAG, "Error during disconnect: ${e.message}")
         }
     }
 
@@ -145,7 +193,28 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
         return java.io.ByteArrayInputStream(mockData)
     }
 
+    // 异步版本的连接验证，必须在协程中调用
+    suspend fun validateConnectionAsync(): SmbConnectionResult = withContext(Dispatchers.IO) {
+        when {
+            host.isEmpty() -> SmbConnectionResult.Error("主机地址不能为空")
+            username.isEmpty() -> SmbConnectionResult.Error("用户名不能为空") 
+            password.isEmpty() -> SmbConnectionResult.Error("密码不能为空")
+            else -> {
+                try {
+                    if (connectAsync()) {
+                        SmbConnectionResult.Success("连接成功")
+                    } else {
+                        SmbConnectionResult.Error("连接失败，请检查网络和服务器状态")
+                    }
+                } catch (e: Exception) {
+                    SmbConnectionResult.Error("连接异常: ${e.message}")
+                }
+            }
+        }
+    }
+
     fun validateConnection(): SmbConnectionResult {
+        // 保持原有API兼容性，但生产环境应使用validateConnectionAsync()
         return when {
             host.isEmpty() -> SmbConnectionResult.Error("主机地址不能为空")
             username.isEmpty() -> SmbConnectionResult.Error("用户名不能为空") 

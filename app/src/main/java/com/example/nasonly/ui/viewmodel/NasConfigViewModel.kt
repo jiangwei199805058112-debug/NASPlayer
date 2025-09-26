@@ -72,14 +72,16 @@ class NasConfigViewModel @Inject constructor(
         domain: String,
         @Suppress("UNUSED_PARAMETER") smbVersion: String
     ) {
+        // 使用viewModelScope.launch确保网络操作在协程中执行
+        // 生产环境不能在主线程访问网络，必须使用协程的IO线程
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null, testResult = null)
                 
-                // 配置连接
+                // 配置连接 - 在IO线程中执行
                 smbRepository.configureConnection(host, share, username, password, domain)
                 
-                // 测试连接
+                // 测试连接 - 内部会切换到IO线程执行网络操作
                 val result = smbRepository.testConnection()
                 result.fold(
                     onSuccess = { message ->

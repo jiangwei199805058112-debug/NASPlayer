@@ -40,7 +40,9 @@ class SmbRepository @Inject constructor(
     suspend fun testConnection(): Result<String> {
         return try {
             Log.d(TAG, "Testing SMB connection...")
-            when (val result = smbConnectionManager.validateConnection()) {
+            // 使用异步版本的连接验证，确保在IO线程中执行网络操作
+            // 生产环境不能在主线程访问网络
+            when (val result = smbConnectionManager.validateConnectionAsync()) {
                 is SmbConnectionResult.Success -> {
                     Log.i(TAG, "SMB connection test successful")
                     Result.success(result.message)
