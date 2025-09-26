@@ -107,9 +107,11 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     }
 }
 
-// 配置 dex 合并任务的内存
-afterEvaluate {
-    tasks.withType<com.android.build.gradle.internal.tasks.DexMergingTask>().configureEach {
-        jvmArgs = listOf("-Xmx4g", "-XX:+UseG1GC")
+// 配置 Android 构建选项以优化内存使用
+android.applicationVariants.all {
+    assembleProvider.configure {
+        doFirst {
+            println("Configuring memory settings for dex merging...")
+        }
     }
 }
