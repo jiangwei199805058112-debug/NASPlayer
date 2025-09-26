@@ -320,7 +320,7 @@ class NasDiscoveryManager @Inject constructor(
             }
             
             // 等待所有扫描完成
-            jobs.awaitAll()
+            jobs.forEach { it.await() }
             
         } catch (e: Exception) {
             Log.e(TAG, "Subnet scan error: ${e.message}", e)

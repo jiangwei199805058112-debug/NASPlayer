@@ -219,12 +219,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             }
             
             // 使用 smbj 打开文件
-            val smbFile: SmbFile = currentShare.openFile(
-                path, 
-                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_READ),
-                setOf(com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OPEN),
-                setOf(com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE)
-            )
+            val smbFile: SmbFile = currentShare.openFile(path)
             
             smbFile.inputStream
         } catch (e: SMBApiException) {
@@ -253,13 +248,8 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                 return null
             }
             
-            // 使用 smbj 打开文件用于写入
-            val smbFile: SmbFile = currentShare.openFile(
-                path,
-                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_WRITE),
-                setOf(com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OVERWRITE_IF),
-                setOf(com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE)
-            )
+            // 使用 smbj 打开文件用于写入  
+            val smbFile: SmbFile = currentShare.openFile(path)
             
             smbFile.outputStream
         } catch (e: SMBApiException) {
@@ -311,9 +301,10 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             val directoryPath = if (path.isEmpty()) "*" else "$path/*"
             
             currentShare.list(directoryPath).forEach { fileInfo ->
-                val isDirectory = fileInfo.standardInformation.isDirectory
                 val fileName = fileInfo.fileName
-                val fileSize = if (isDirectory) 0L else fileInfo.standardInformation.endOfFile
+                val fileAttributes = fileInfo.fileAttributes
+                val isDirectory = fileAttributes and 0x10 != 0 // FILE_ATTRIBUTE_DIRECTORY
+                val fileSize = if (isDirectory) 0L else fileInfo.endOfFile
                 val fullPath = if (path.isEmpty()) fileName else "$path/$fileName"
                 
                 // 跳过 . 和 .. 目录

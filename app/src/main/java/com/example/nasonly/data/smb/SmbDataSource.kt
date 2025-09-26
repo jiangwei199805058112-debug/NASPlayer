@@ -1,17 +1,7 @@
 package com.example.nasonly.data.smb
 
 import android.util.Log
-import com.example.nasonly.data.m            // 使用真实的 SMB 文件列表获取逻辑
-            val files = if (smbManager is SmbConnectionManager) {
-                smbManager.listDirectory(directoryPath)
-            } else {
-                // 如果不是我们的实现，返回空列表
-                Log.w(TAG, "SMB manager is not SmbConnectionManager, cannot list directory")
-                emptyList()
-            }
-            
-            Log.d(TAG, "Found ${files.size} files in directory: $directoryPath")
-            Result.success(files)etadataExtractor
+import com.example.nasonly.data.media.VideoMetadataExtractor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
