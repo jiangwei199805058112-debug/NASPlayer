@@ -219,14 +219,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             }
             
             // 使用 smbj 打开文件（只读）
-            val smbFile: SmbFile = currentShare.openFile(
-                path,
-                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_READ),
-                setOf(com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OPEN),
-                setOf(com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE),
-                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_READ),
-                null
-            )
+            val smbFile: SmbFile = currentShare.openFile(path)
             smbFile.inputStream
         } catch (e: SMBApiException) {
             Log.e(TAG, "SMB API error opening file $path: ${e.message}", e)
@@ -255,14 +248,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             }
             
             // 使用 smbj 打开文件用于写入
-            val smbFile: SmbFile = currentShare.openFile(
-                path,
-                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_WRITE),
-                setOf(com.hierynomus.mssmb2.SMB2CreateDisposition.FILE_OVERWRITE_IF),
-                setOf(com.hierynomus.mssmb2.SMB2CreateOptions.FILE_NON_DIRECTORY_FILE),
-                setOf(com.hierynomus.mssmb2.SMB2ShareAccess.FILE_SHARE_WRITE),
-                null
-            )
+            val smbFile: SmbFile = currentShare.openFile(path)
             smbFile.outputStream
         } catch (e: SMBApiException) {
             Log.e(TAG, "SMB API error opening file for write $path: ${e.message}", e)
