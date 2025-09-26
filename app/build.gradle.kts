@@ -3,6 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.ktlint)
 }
 
 android {
@@ -115,5 +117,43 @@ android.applicationVariants.all {
         doFirst {
             println("Configuring memory settings for dex merging...")
         }
+    }
+}
+
+// Configure detekt for app module
+detekt {
+    toolVersion = "1.23.1"
+    config.setFrom("$rootProject.projectDir/config/detekt/detekt.yml")
+    buildUponDefaultConfig = true
+    allRules = false
+    
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        txt.required.set(true)
+        sarif.required.set(true)
+        md.required.set(true)
+    }
+}
+
+// Configure ktlint for app module  
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    version.set("0.50.0")
+    debug.set(true)
+    verbose.set(true)
+    android.set(true)
+    outputToConsole.set(true)
+    outputColorName.set("RED")
+    ignoreFailures.set(false)
+    
+    filter {
+        exclude("**/generated/**")
+        include("**/kotlin/**")
+    }
+    
+    reporters {
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.SARIF)
     }
 }

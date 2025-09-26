@@ -1,0 +1,145 @@
+name: Code Quality Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+
+    - name: Run detekt
+      run: ./gradlew detekt
+      continue-on-error: false
+
+    - name: Upload detekt reports
+      uses: actions/upload-artifact@v4
+      if: success() || failure()
+      with:
+        name: detekt-reports
+        path: |
+          **/build/reports/detekt/
+        retention-days: 30
+
+    - name: Run ktlint check
+      run: ./gradlew ktlintCheck
+      continue-on-error: false
+
+    - name: Upload ktlint reports
+      uses: actions/upload-artifact@v4
+      if: success() || failure()
+      with:
+        name: ktlint-reports
+        path: |
+          **/build/reports/ktlint/
+        retention-days: 30
+
+    - name: Build debug APK
+      run: ./gradlew assembleDebug
+      continue-on-error: false
+
+    - name: Comment PR with results
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request' && (success() || failure())
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Check if detekt and ktlint passed
+          const workflowRun = context.payload.workflow_run || context.payload;
+          const conclusion = '${{ job.status }}';
+          
+          let comment = '## 🔍 Code Quality Check Results\n\n';
+          
+          if (conclusion === 'success') {
+            comment += '✅ All code quality checks passed!\n\n';
+            comment += '- ✅ detekt: No issues found\n';
+            comment += '- ✅ ktlint: Code style is compliant\n';
+            comment += '- ✅ Build: Compilation successful\n';
+          } else {
+            comment += '❌ Some code quality checks failed\n\n';
+            comment += 'Please check the workflow logs for detailed information.\n';
+          }
+          
+          comment += '\n📋 **Reports available in workflow artifacts**';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  android-ci:
+    needs: code-quality
+    runs-on: [self-hosted, Windows, x64]
+    if: success()
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set PowerShell execution policy
+      shell: pwsh
+      run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Cache Gradle
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+    - name: Make gradlew executable (Windows)
+      run: |
+        if (Test-Path "./gradlew.bat") {
+          Write-Host "Using gradlew.bat for Windows"
+        } else {
+          Write-Host "gradlew.bat not found, using gradlew"
+        }
+      shell: powershell
+
+    - name: Build and test
+      run: |
+        if (Test-Path "./gradlew.bat") {
+          .\gradlew.bat assembleDebug testDebugUnitTest
+        } else {
+          .\gradlew assembleDebug testDebugUnitTest
+        }
+      shell: powershell
