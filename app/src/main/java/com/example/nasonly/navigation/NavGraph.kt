@@ -13,6 +13,7 @@ import com.example.nasonly.ui.screens.MediaLibraryScreen
 import com.example.nasonly.ui.screens.VideoPlayerScreen
 import com.example.nasonly.ui.screens.PlaylistManagementScreen
 import com.example.nasonly.ui.screens.PlaylistDetailScreen
+import com.example.nasonly.ui.screens.EnhancedSettingsScreen
 
 @Composable
 fun NavGraph(
@@ -22,6 +23,11 @@ fun NavGraph(
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.NAS_CONFIG) {
             NasConfigScreen(navController)
+        }
+        composable(Routes.SETTINGS) {
+            EnhancedSettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
         composable(Routes.MEDIA_LIBRARY) {
             MediaLibraryScreen(navController)

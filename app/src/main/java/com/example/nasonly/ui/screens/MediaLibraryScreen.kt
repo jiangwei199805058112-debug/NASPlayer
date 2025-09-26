@@ -61,6 +61,13 @@ fun MediaLibraryScreen(
                 ) {
                     Icon(Icons.Default.Refresh, contentDescription = "刷新")
                 }
+                IconButton(
+                    onClick = { 
+                        navController.navigate("settings")
+                    }
+                ) {
+                    Icon(Icons.Default.Settings, contentDescription = "设置")
+                }
             }
         )
 

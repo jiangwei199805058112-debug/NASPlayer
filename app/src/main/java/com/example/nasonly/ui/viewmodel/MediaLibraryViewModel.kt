@@ -30,7 +30,7 @@ class MediaLibraryViewModel @Inject constructor(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
                 
-                val result = smbRepository.listFiles(path)
+                val result = smbRepository.listFilesWithMetadata(path, includeMetadata = true, generateThumbnails = true)
                 result.fold(
                     onSuccess = { smbFiles ->
                         val mediaItems = smbFiles.map { smbFile ->

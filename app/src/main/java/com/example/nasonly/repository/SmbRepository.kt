@@ -86,6 +86,20 @@ class SmbRepository @Inject constructor(
         }
     }
 
+    suspend fun listFilesWithMetadata(
+        directoryPath: String = "",
+        includeMetadata: Boolean = true,
+        generateThumbnails: Boolean = true
+    ): Result<List<SmbFileInfo>> {
+        return try {
+            Log.d(TAG, "Listing files with metadata in directory: $directoryPath")
+            smbDataSource.listFilesWithMetadata(directoryPath, includeMetadata, generateThumbnails)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error listing files with metadata", e)
+            Result.failure(Exception("获取增强文件列表失败: ${e.message}"))
+        }
+    }
+
     fun getConnectionStatus(): Flow<Boolean> = flow {
         try {
             emit(smbConnectionManager.isConnected())
