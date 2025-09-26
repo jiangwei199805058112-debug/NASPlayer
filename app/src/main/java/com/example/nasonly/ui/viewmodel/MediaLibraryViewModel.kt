@@ -33,6 +33,7 @@ class MediaLibraryViewModel @Inject constructor(
                 val result = smbRepository.listFilesWithMetadata(path, includeMetadata = true, generateThumbnails = true)
                 result.fold(
                     onSuccess = { smbFiles ->
+                        @Suppress("UNUSED_VARIABLE")
                         val mediaItems = smbFiles.map { smbFile ->
                             MediaItem(
                                 name = smbFile.name,

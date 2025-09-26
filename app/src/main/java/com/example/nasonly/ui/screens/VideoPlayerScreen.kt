@@ -90,7 +90,8 @@ fun VideoPlayerScreen(
                     onSeek = viewModel::seekTo,
                     onFastForward = { viewModel.fastForward() },
                     onRewind = { viewModel.rewind() },
-                    onFullscreenToggle = { viewModel.toggleFullscreen() }
+                    onFullscreenToggle = { viewModel.toggleFullscreen() },
+                    onAddToFavorite = { viewModel.addToFavoritePlaylist() }
                 )
             }
 
@@ -142,7 +143,8 @@ private fun VideoPlayerControls(
     onSeek: (Long) -> Unit,
     onFastForward: () -> Unit,
     onRewind: () -> Unit,
-    onFullscreenToggle: () -> Unit = {}
+    onFullscreenToggle: () -> Unit = {},
+    onAddToFavorite: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -209,6 +211,31 @@ private fun VideoPlayerControls(
                     contentDescription = "快进10秒",
                     tint = Color.White
                 )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // 收藏按钮
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            ElevatedButton(
+                onClick = onAddToFavorite,
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                Icon(
+                    Icons.Default.FavoriteBorder,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("一键收藏到播放列表")
             }
         }
         

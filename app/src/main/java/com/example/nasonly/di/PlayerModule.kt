@@ -3,7 +3,7 @@ package com.example.nasonly.di
 import android.content.Context
 import com.example.nasonly.core.player.ExoPlayerManager
 import com.example.nasonly.data.smb.SmbDataSource
-import com.google.android.exoplayer2.ExoPlayer
+import androidx.media3.exoplayer.ExoPlayer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

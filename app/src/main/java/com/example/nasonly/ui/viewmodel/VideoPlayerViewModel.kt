@@ -7,6 +7,8 @@ import com.example.nasonly.core.player.ExoPlayerManager
 import com.example.nasonly.repository.SmbRepository
 import com.example.nasonly.data.db.PlaybackHistory
 import com.example.nasonly.data.db.PlaybackHistoryDao
+import com.example.nasonly.data.db.Playlist
+import com.example.nasonly.data.db.PlaylistDao
 import com.example.nasonly.data.db.PlaylistItem
 import com.example.nasonly.data.db.PlaylistItemDao
 import com.example.nasonly.data.preferences.UserPreferences
@@ -27,6 +29,7 @@ class VideoPlayerViewModel @Inject constructor(
     private val smbRepository: SmbRepository,
     private val playbackHistoryDao: PlaybackHistoryDao,
     private val playlistItemDao: PlaylistItemDao,
+    private val playlistDao: PlaylistDao,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(VideoPlayerUiState())
@@ -51,7 +54,7 @@ class VideoPlayerViewModel @Inject constructor(
                 // 获取SMB输入流
                 val result = smbRepository.getInputStream(uri)
                 result.fold(
-                    onSuccess = { inputStream ->
+                    onSuccess = { _ ->
                         // 准备播放器
                         exoPlayerManager.prepare(Uri.parse(uri))
                         _uiState.value = _uiState.value.copy(
@@ -405,6 +408,71 @@ class VideoPlayerViewModel @Inject constructor(
             
             // 初始化新的视频播放
             initializePlayer(currentItem.videoPath)
+        }
+    }
+
+    fun addToFavoritePlaylist() {
+        viewModelScope.launch {
+            try {
+                if (currentUri.isNotEmpty()) {
+                    // 获取或创建"我的收藏"播放列表
+                    val favoritePlaylistName = "我的收藏"
+                    var favoritePlaylist = playlistDao.getPlaylistByName(favoritePlaylistName)
+                    
+                    val playlistId = if (favoritePlaylist == null) {
+                        // 如果不存在收藏播放列表，创建一个新的
+                        val newPlaylist = Playlist(
+                            name = favoritePlaylistName,
+                            description = "自动创建的收藏播放列表",
+                            createdAt = System.currentTimeMillis(),
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        playlistDao.insertPlaylist(newPlaylist)
+                    } else {
+                        favoritePlaylist.id
+                    }
+                    
+                    // 检查视频是否已在收藏列表中
+                    val existingItem = playlistItemDao.getPlaylistItemByPath(playlistId, currentUri)
+                    
+                    if (existingItem == null) {
+                        // 添加当前视频到播放列表
+                        val maxIndex = playlistItemDao.getMaxOrderIndex(playlistId) ?: 0
+                        val videoItem = PlaylistItem(
+                            playlistId = playlistId,
+                            videoPath = currentUri,
+                            videoName = extractVideoName(currentUri),
+                            fileSize = 0, // 可以从SMB获取实际文件大小
+                            duration = _uiState.value.duration,
+                            orderIndex = maxIndex + 1,
+                            addedAt = System.currentTimeMillis()
+                        )
+                        playlistItemDao.insertPlaylistItem(videoItem)
+                        
+                        // 更新播放列表项目数量
+                        playlistDao.updatePlaylistItemCount(playlistId)
+                        
+                        // 显示成功消息（这里可以通过UI状态反馈）
+                        // _uiState.value = _uiState.value.copy(successMessage = "已添加到收藏列表")
+                    } else {
+                        // 视频已存在于收藏列表中
+                        // _uiState.value = _uiState.value.copy(successMessage = "该视频已在收藏列表中")
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "添加到收藏列表失败: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    private fun extractVideoName(uri: String): String {
+        return try {
+            val decodedUri = Uri.decode(uri)
+            decodedUri.substringAfterLast("/").substringBeforeLast(".")
+        } catch (e: Exception) {
+            "未知视频"
         }
     }
 

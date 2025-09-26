@@ -54,9 +54,7 @@ fun VideoGestureOverlay(
                 detectDragGestures(
                     onDragStart = { offset ->
                         val x = offset.x
-                        val y = offset.y
                         val screenWidthPx = screenWidth.toPx()
-                        val screenHeightPx = screenHeight.toPx()
                         
                         gestureState = when {
                             // 左侧区域：亮度控制
@@ -158,7 +156,7 @@ private fun GestureIndicator(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         LinearProgressIndicator(
-                            progress = value,
+                            progress = { value },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(4.dp),
@@ -183,7 +181,7 @@ private fun GestureIndicator(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         LinearProgressIndicator(
-                            progress = value,
+                            progress = { value },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(4.dp),

@@ -496,7 +496,7 @@ fun VideoInfoChip(
 
 @Composable
 fun VideoListToolbar(
-    sortOrder: SortOrder,
+    @Suppress("UNUSED_PARAMETER") sortOrder: SortOrder,
     viewMode: ViewMode,
     showThumbnails: Boolean,
     onSortOrderChange: (SortOrder) -> Unit,

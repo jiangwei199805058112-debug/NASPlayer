@@ -16,18 +16,6 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
     
     // 播放器设置
-    private val _subtitleEnabled = MutableStateFlow(true)
-    val subtitleEnabled: StateFlow<Boolean> = _subtitleEnabled.asStateFlow()
-    
-    private val _subtitleSize = MutableStateFlow(UserPreferences.DEFAULT_SUBTITLE_SIZE)
-    val subtitleSize: StateFlow<Float> = _subtitleSize.asStateFlow()
-    
-    private val _subtitleLanguage = MutableStateFlow("auto")
-    val subtitleLanguage: StateFlow<String> = _subtitleLanguage.asStateFlow()
-    
-    private val _audioTrackLanguage = MutableStateFlow("auto")
-    val audioTrackLanguage: StateFlow<String> = _audioTrackLanguage.asStateFlow()
-    
     private val _playbackSpeed = MutableStateFlow(UserPreferences.DEFAULT_PLAYBACK_SPEED)
     val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
     
@@ -36,6 +24,9 @@ class SettingsViewModel @Inject constructor(
     
     private val _resumePlayback = MutableStateFlow(true)
     val resumePlayback: StateFlow<Boolean> = _resumePlayback.asStateFlow()
+    
+    private val _screenOrientation = MutableStateFlow("auto")
+    val screenOrientation: StateFlow<String> = _screenOrientation.asStateFlow()
     
     // 系统设置
     private val _cacheSizeMB = MutableStateFlow(UserPreferences.DEFAULT_CACHE_SIZE_MB)
@@ -86,26 +77,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // 播放器设置
-                userPreferences.subtitleEnabled.collect { _subtitleEnabled.value = it }
+                userPreferences.playbackSpeed.collect { _playbackSpeed.value = it }
             } catch (e: Exception) {
                 _error.value = "加载设置失败: ${e.message}"
             }
-        }
-        
-        viewModelScope.launch {
-            userPreferences.subtitleSize.collect { _subtitleSize.value = it }
-        }
-        
-        viewModelScope.launch {
-            userPreferences.subtitleLanguage.collect { _subtitleLanguage.value = it }
-        }
-        
-        viewModelScope.launch {
-            userPreferences.audioTrackLanguage.collect { _audioTrackLanguage.value = it }
-        }
-        
-        viewModelScope.launch {
-            userPreferences.playbackSpeed.collect { _playbackSpeed.value = it }
         }
         
         viewModelScope.launch {
@@ -114,6 +89,10 @@ class SettingsViewModel @Inject constructor(
         
         viewModelScope.launch {
             userPreferences.resumePlayback.collect { _resumePlayback.value = it }
+        }
+        
+        viewModelScope.launch {
+            userPreferences.screenOrientation.collect { _screenOrientation.value = it }
         }
         
         // 系统设置
@@ -168,50 +147,6 @@ class SettingsViewModel @Inject constructor(
     }
     
     // 播放器设置更新方法
-    fun setSubtitleEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            try {
-                userPreferences.setSubtitleEnabled(enabled)
-                _error.value = null
-            } catch (e: Exception) {
-                _error.value = "保存设置失败: ${e.message}"
-            }
-        }
-    }
-    
-    fun setSubtitleSize(size: Float) {
-        viewModelScope.launch {
-            try {
-                userPreferences.setSubtitleSize(size)
-                _error.value = null
-            } catch (e: Exception) {
-                _error.value = "保存设置失败: ${e.message}"
-            }
-        }
-    }
-    
-    fun setSubtitleLanguage(language: String) {
-        viewModelScope.launch {
-            try {
-                userPreferences.setSubtitleLanguage(language)
-                _error.value = null
-            } catch (e: Exception) {
-                _error.value = "保存设置失败: ${e.message}"
-            }
-        }
-    }
-    
-    fun setAudioTrackLanguage(language: String) {
-        viewModelScope.launch {
-            try {
-                userPreferences.setAudioTrackLanguage(language)
-                _error.value = null
-            } catch (e: Exception) {
-                _error.value = "保存设置失败: ${e.message}"
-            }
-        }
-    }
-    
     fun setPlaybackSpeed(speed: Float) {
         viewModelScope.launch {
             try {
@@ -238,6 +173,17 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 userPreferences.setResumePlayback(enabled)
+                _error.value = null
+            } catch (e: Exception) {
+                _error.value = "保存设置失败: ${e.message}"
+            }
+        }
+    }
+    
+    fun setScreenOrientation(orientation: String) {
+        viewModelScope.launch {
+            try {
+                userPreferences.setScreenOrientation(orientation)
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = "保存设置失败: ${e.message}"

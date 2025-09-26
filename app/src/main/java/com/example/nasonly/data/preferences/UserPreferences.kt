@@ -17,13 +17,10 @@ class UserPreferences(private val context: Context) {
     // 播放器设置键
     companion object {
         // 播放器设置
-        val SUBTITLE_ENABLED = booleanPreferencesKey("subtitle_enabled")
-        val SUBTITLE_SIZE = floatPreferencesKey("subtitle_size")
-        val SUBTITLE_LANGUAGE = stringPreferencesKey("subtitle_language")
-        val AUDIO_TRACK_LANGUAGE = stringPreferencesKey("audio_track_language")
         val PLAYBACK_SPEED = floatPreferencesKey("playback_speed")
         val AUTO_PLAY_NEXT = booleanPreferencesKey("auto_play_next")
         val RESUME_PLAYBACK = booleanPreferencesKey("resume_playback")
+        val SCREEN_ORIENTATION = stringPreferencesKey("screen_orientation")
         
         // 系统设置
         val CACHE_SIZE_MB = intPreferencesKey("cache_size_mb")
@@ -42,7 +39,6 @@ class UserPreferences(private val context: Context) {
         val SORT_ASCENDING = booleanPreferencesKey("sort_ascending")
         
         // 默认值
-        const val DEFAULT_SUBTITLE_SIZE = 16f
         const val DEFAULT_PLAYBACK_SPEED = 1.0f
         const val DEFAULT_CACHE_SIZE_MB = 200
         const val DEFAULT_NETWORK_TIMEOUT_SECONDS = 30
@@ -54,18 +50,6 @@ class UserPreferences(private val context: Context) {
     }
     
     // 播放器设置
-    val subtitleEnabled: Flow<Boolean> = context.dataStore.data
-        .map { preferences -> preferences[SUBTITLE_ENABLED] ?: true }
-    
-    val subtitleSize: Flow<Float> = context.dataStore.data
-        .map { preferences -> preferences[SUBTITLE_SIZE] ?: DEFAULT_SUBTITLE_SIZE }
-    
-    val subtitleLanguage: Flow<String> = context.dataStore.data
-        .map { preferences -> preferences[SUBTITLE_LANGUAGE] ?: "auto" }
-    
-    val audioTrackLanguage: Flow<String> = context.dataStore.data
-        .map { preferences -> preferences[AUDIO_TRACK_LANGUAGE] ?: "auto" }
-    
     val playbackSpeed: Flow<Float> = context.dataStore.data
         .map { preferences -> preferences[PLAYBACK_SPEED] ?: DEFAULT_PLAYBACK_SPEED }
     
@@ -74,6 +58,9 @@ class UserPreferences(private val context: Context) {
     
     val resumePlayback: Flow<Boolean> = context.dataStore.data
         .map { preferences -> preferences[RESUME_PLAYBACK] ?: true }
+    
+    val screenOrientation: Flow<String> = context.dataStore.data
+        .map { preferences -> preferences[SCREEN_ORIENTATION] ?: "auto" }
     
     // 系统设置
     val cacheSizeMB: Flow<Int> = context.dataStore.data
@@ -114,30 +101,6 @@ class UserPreferences(private val context: Context) {
         .map { preferences -> preferences[SORT_ASCENDING] ?: true }
     
     // 设置保存方法
-    suspend fun setSubtitleEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[SUBTITLE_ENABLED] = enabled
-        }
-    }
-    
-    suspend fun setSubtitleSize(size: Float) {
-        context.dataStore.edit { preferences ->
-            preferences[SUBTITLE_SIZE] = size
-        }
-    }
-    
-    suspend fun setSubtitleLanguage(language: String) {
-        context.dataStore.edit { preferences ->
-            preferences[SUBTITLE_LANGUAGE] = language
-        }
-    }
-    
-    suspend fun setAudioTrackLanguage(language: String) {
-        context.dataStore.edit { preferences ->
-            preferences[AUDIO_TRACK_LANGUAGE] = language
-        }
-    }
-    
     suspend fun setPlaybackSpeed(speed: Float) {
         context.dataStore.edit { preferences ->
             preferences[PLAYBACK_SPEED] = speed
@@ -153,6 +116,12 @@ class UserPreferences(private val context: Context) {
     suspend fun setResumePlayback(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[RESUME_PLAYBACK] = enabled
+        }
+    }
+    
+    suspend fun setScreenOrientation(orientation: String) {
+        context.dataStore.edit { preferences ->
+            preferences[SCREEN_ORIENTATION] = orientation
         }
     }
     

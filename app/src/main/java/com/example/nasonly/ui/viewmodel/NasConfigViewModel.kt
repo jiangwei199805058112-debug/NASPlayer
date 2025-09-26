@@ -70,7 +70,7 @@ class NasConfigViewModel @Inject constructor(
         username: String,
         password: String,
         domain: String,
-        smbVersion: String
+        @Suppress("UNUSED_PARAMETER") smbVersion: String
     ) {
         viewModelScope.launch {
             try {

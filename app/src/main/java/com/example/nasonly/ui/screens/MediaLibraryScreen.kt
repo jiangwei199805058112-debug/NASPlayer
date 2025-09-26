@@ -48,7 +48,7 @@ fun MediaLibraryScreen(
                         navController.navigate("playlist_management")
                     }
                 ) {
-                    Icon(Icons.Default.List, contentDescription = "播放列表")
+                    Icon(Icons.Default.List, contentDescription = "媒体库")
                 }
                 IconButton(
                     onClick = { 
@@ -222,10 +222,10 @@ private fun MediaFilesTab(
                         )
                         onFileClick(media)
                     },
-                    onFileLongClick = { smbFile ->
+                    onFileLongClick = { _ ->
                         // TODO: 显示文件详细信息对话框
                     },
-                    onAddToPlaylist = { smbFile ->
+                    onAddToPlaylist = { _ ->
                         // TODO: 显示添加到播放列表对话框
                     },
                     modifier = Modifier.fillMaxSize()

@@ -2,22 +2,21 @@ package com.example.nasonly.core.player
 
 import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.example.nasonly.data.smb.SmbDataSource
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DefaultDataSource
-import com.google.android.exoplayer2.util.Util
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.common.util.Util
 
 class ExoPlayerManager(
     private val context: Context,
     private val smbDataSource: SmbDataSource
-) : LifecycleObserver {
+) : DefaultLifecycleObserver {
     private var exoPlayer: ExoPlayer? = null
 
     fun createPlayer(): ExoPlayer {
@@ -59,13 +58,13 @@ class ExoPlayerManager(
         exoPlayer = null
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop() {
+    override fun onStop(owner: LifecycleOwner) {
+        super.onStop(owner)
         release()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
+        super.onDestroy(owner)
         release()
     }
 
