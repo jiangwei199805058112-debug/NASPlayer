@@ -30,15 +30,15 @@ jobs:
     - name: Accept SDK licenses
       run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace --info --no-daemon
-
-    - name: Run Lint
-      run: ./gradlew lintDebug --stacktrace --continue --no-daemon
-      if: success() || failure()
+    - name: Build project
+      run: ./gradlew build --stacktrace --no-daemon
 
     - name: Run Unit Tests
       run: ./gradlew testDebugUnitTest --stacktrace --continue --no-daemon
+      if: success() || failure()
+
+    - name: Run Lint
+      run: ./gradlew lintDebug --stacktrace --continue --no-daemon
       if: success() || failure()
 
     - name: Upload Debug APK
