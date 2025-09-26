@@ -51,6 +51,9 @@ class VideoPlayerViewModel @Inject constructor(
             try {
                 _uiState.value = _uiState.value.copy(isBuffering = true, error = null)
                 
+                // 检查收藏状态
+                checkFavoriteStatus()
+                
                 // 获取SMB输入流
                 val result = smbRepository.getInputStream(uri)
                 result.fold(
@@ -76,6 +79,20 @@ class VideoPlayerViewModel @Inject constructor(
                     error = "播放器初始化失败: ${e.message}"
                 )
             }
+        }
+    }
+
+    private suspend fun checkFavoriteStatus() {
+        try {
+            val favoritePlaylist = playlistDao.getPlaylistByName("我的收藏")
+            if (favoritePlaylist != null) {
+                val existingItem = playlistItemDao.getPlaylistItemByPath(favoritePlaylist.id, currentUri)
+                _uiState.value = _uiState.value.copy(isFavorited = existingItem != null)
+            } else {
+                _uiState.value = _uiState.value.copy(isFavorited = false)
+            }
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(isFavorited = false)
         }
     }
 
@@ -411,6 +428,61 @@ class VideoPlayerViewModel @Inject constructor(
         }
     }
 
+    fun toggleFavorite() {
+        viewModelScope.launch {
+            try {
+                if (currentUri.isNotEmpty()) {
+                    val favoritePlaylistName = "我的收藏"
+                    var favoritePlaylist = playlistDao.getPlaylistByName(favoritePlaylistName)
+                    
+                    val playlistId = if (favoritePlaylist == null) {
+                        // 如果不存在收藏播放列表，创建一个新的
+                        val newPlaylist = Playlist(
+                            name = favoritePlaylistName,
+                            description = "自动创建的收藏播放列表",
+                            createdAt = System.currentTimeMillis(),
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        playlistDao.insertPlaylist(newPlaylist)
+                    } else {
+                        favoritePlaylist.id
+                    }
+                    
+                    // 检查视频是否已在收藏列表中
+                    val existingItem = playlistItemDao.getPlaylistItemByPath(playlistId, currentUri)
+                    
+                    if (existingItem == null) {
+                        // 添加到收藏
+                        val maxIndex = playlistItemDao.getMaxOrderIndex(playlistId) ?: 0
+                        val videoItem = PlaylistItem(
+                            playlistId = playlistId,
+                            videoPath = currentUri,
+                            videoName = extractVideoName(currentUri),
+                            fileSize = 0,
+                            duration = _uiState.value.duration,
+                            orderIndex = maxIndex + 1,
+                            addedAt = System.currentTimeMillis()
+                        )
+                        playlistItemDao.insertPlaylistItem(videoItem)
+                        playlistDao.updatePlaylistItemCount(playlistId)
+                        
+                        _uiState.value = _uiState.value.copy(isFavorited = true)
+                    } else {
+                        // 从收藏中移除
+                        playlistItemDao.deletePlaylistItem(existingItem)
+                        playlistDao.updatePlaylistItemCount(playlistId)
+                        
+                        _uiState.value = _uiState.value.copy(isFavorited = false)
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "切换收藏状态失败: ${e.message}"
+                )
+            }
+        }
+    }
+
     fun addToFavoritePlaylist() {
         viewModelScope.launch {
             try {
@@ -498,5 +570,6 @@ data class VideoPlayerUiState(
     val autoPlayNext: Boolean = false,
     val playbackSpeed: Float = 1.0f,
     val canPlayPrevious: Boolean = false,
-    val canPlayNext: Boolean = false
+    val canPlayNext: Boolean = false,
+    val isFavorited: Boolean = false
 )

@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.example.nasonly.navigation.NavGraph
 import com.example.nasonly.navigation.Routes
+import com.example.nasonly.ui.theme.NASPlayerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -34,7 +35,7 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermission()
         
         setContent {
-            MaterialTheme {
+            NASPlayerTheme {
                 Surface {
                     val navController = rememberNavController()
                     NavGraph(
