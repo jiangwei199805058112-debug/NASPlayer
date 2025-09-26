@@ -43,7 +43,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
-    
+
     // 配置打包选项
     packaging {
         resources {
@@ -65,34 +65,34 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
-    
+
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
-    
+
     // Media3 ExoPlayer
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.common)
-    
+
     // SMB
     implementation(libs.smbj)
-    
+
     // Coroutines
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
-    
+
     // DataStore
     implementation(libs.androidx.datastore.preferences)
-    
+
     // Coil for image loading
     implementation(libs.coil.compose)
-    
+
     // Test dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
@@ -106,7 +106,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     kotlinOptions {
         freeCompilerArgs += listOf(
             "-opt-in=kotlin.RequiresOptIn",
-            "-Xjvm-default=all"
+            "-Xjvm-default=all",
         )
     }
 }
@@ -123,10 +123,12 @@ android.applicationVariants.all {
 // Configure detekt for app module
 detekt {
     toolVersion = "1.23.1"
-    config.setFrom("$rootProject.projectDir/config/detekt/detekt.yml")
+    config.setFrom("$projectDir/../config/detekt/detekt.yml")
     buildUponDefaultConfig = true
     allRules = false
-    
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     reports {
         html.required.set(true)
         xml.required.set(true)
@@ -134,9 +136,10 @@ detekt {
         sarif.required.set(true)
         md.required.set(true)
     }
+    jvmTarget = "17"
 }
 
-// Configure ktlint for app module  
+// Configure ktlint for app module
 configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     version.set("0.50.0")
     debug.set(true)
@@ -145,12 +148,12 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     outputToConsole.set(true)
     outputColorName.set("RED")
     ignoreFailures.set(false)
-    
+
     filter {
         exclude("**/generated/**")
         include("**/kotlin/**")
     }
-    
+
     reporters {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)

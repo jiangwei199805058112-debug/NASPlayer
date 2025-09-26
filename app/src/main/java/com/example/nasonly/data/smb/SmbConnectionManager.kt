@@ -15,12 +15,12 @@ import com.hierynomus.smbj.share.DiskShare
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.mssmb2.SMBApiException
 import com.hierynomus.smbj.share.File as SmbFile
-import com.hierynomus.mssmb2.messages.SMB2CreateDisposition
-import com.hierynomus.mssmb2.messages.SMB2CreateOptions
-import com.hierynomus.mssmb2.messages.SMB2ShareAccess
-import com.hierynomus.mssmb2.messages.SMB2ImpersonationLevel
-import com.hierynomus.protocol.commons.enums.AccessMask
-import com.hierynomus.protocol.commons.enums.FileAttributes
+import com.hierynomus.mssmb2.SMB2CreateDisposition
+import com.hierynomus.mssmb2.SMB2CreateOptions
+import com.hierynomus.mssmb2.SMB2ShareAccess
+import com.hierynomus.mssmb2.SMB2ImpersonationLevel
+import com.hierynomus.msdtyp.AccessMask
+import com.hierynomus.msfscc.FileAttributes
 import java.io.IOException
 
 @Singleton

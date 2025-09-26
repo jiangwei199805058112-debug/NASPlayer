@@ -24,7 +24,7 @@ fun NavGraph(
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.NAS_DISCOVERY) {
             NasDiscoveryScreen(
-                onDeviceConnected = { device ->
+                onDeviceConnected = { _ ->
                     // 连接成功后导航到媒体库
                     navController.navigate(Routes.MEDIA_LIBRARY)
                 }

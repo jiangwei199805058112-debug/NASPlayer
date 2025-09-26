@@ -24,7 +24,7 @@ import android.net.Uri
 
 @HiltViewModel
 class VideoPlayerViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+    @Suppress("UNUSED_PARAMETER") private val savedStateHandle: SavedStateHandle,
     private val exoPlayerManager: ExoPlayerManager,
     private val smbRepository: SmbRepository,
     private val playbackHistoryDao: PlaybackHistoryDao,

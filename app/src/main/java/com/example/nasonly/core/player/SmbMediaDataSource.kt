@@ -20,20 +20,33 @@ class SmbMediaDataSource(
     override fun open(dataSpec: DataSpec): Long {
         uri = dataSpec.uri
         val path = uri?.path ?: throw IOException("Invalid SMB path")
-        runBlocking {
-            val result = smbDataSource.getInputStream(path)
-            inputStream = result.getOrNull() ?: throw IOException("Failed to open SMB stream: ${result.exceptionOrNull()?.message}")
-        }
-        if (dataSpec.position > 0) {
-            val seekResult = runBlocking {
-                smbDataSource.seekStream(inputStream!!, dataSpec.position)
+        
+        // TODO: CRITICAL - runBlocking should not be used in DataSource.open()
+        // This blocks the calling thread and violates ExoPlayer's contract.
+        // Consider pre-opening streams or using async initialization.
+        try {
+            val result = runBlocking {
+                smbDataSource.getInputStream(path)
             }
-            if (seekResult.getOrNull() != true) {
-                throw IOException("Seek failed: ${seekResult.exceptionOrNull()?.message}")
+            inputStream = result.getOrNull() 
+                ?: throw IOException("Failed to open SMB stream: ${result.exceptionOrNull()?.message}")
+                
+            if (dataSpec.position > 0) {
+                val seekResult = runBlocking {
+                    inputStream?.let { stream ->
+                        smbDataSource.seekStream(stream, dataSpec.position)
+                    } ?: Result.failure(IOException("Stream is null"))
+                }
+                if (seekResult.getOrNull() != true) {
+                    throw IOException("Seek failed: ${seekResult.exceptionOrNull()?.message}")
+                }
             }
+            bytesRead = 0
+            return C.LENGTH_UNSET.toLong()
+        } catch (e: Exception) {
+            close() // Ensure cleanup on failure
+            throw IOException("Failed to open SMB data source", e)
         }
-        bytesRead = 0
-        return C.LENGTH_UNSET.toLong()
     }
 
     override fun read(buffer: ByteArray, offset: Int, readLength: Int): Int {
@@ -52,11 +65,20 @@ class SmbMediaDataSource(
     override fun close() {
         try {
             inputStream?.close()
-        } catch (_: Exception) {}
-        inputStream = null
-        uri = null
-        bytesRead = 0
-        smbDataSource.close()
+        } catch (e: Exception) {
+            // Log but don't throw - close() should be idempotent
+            android.util.Log.w("SmbMediaDataSource", "Error closing input stream", e)
+        } finally {
+            inputStream = null
+            uri = null
+            bytesRead = 0
+        }
+        
+        try {
+            smbDataSource.close()
+        } catch (e: Exception) {
+            android.util.Log.w("SmbMediaDataSource", "Error closing SMB data source", e)
+        }
     }
 
     override fun addTransferListener(transferListener: TransferListener) {

@@ -21,7 +21,7 @@ import com.example.nasonly.data.discovery.DeviceInfo
 @Composable
 fun NasDiscoveryScreen(
     viewModel: NasDiscoveryViewModel = hiltViewModel(),
-    onDeviceConnected: (DeviceInfo) -> Unit = {}
+    @Suppress("UNUSED_PARAMETER") onDeviceConnected: (DeviceInfo) -> Unit = {}
 ) {
     val state by viewModel.discoveryState.collectAsState()
     var showConnectionDialog by remember { mutableStateOf<DeviceInfo?>(null) }
