@@ -1,0 +1,26 @@
+在仓库中新建 `.github/workflows/ci-test.yml`
+写入以下内容：
+
+name: CI Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run Unit Tests
+        run: ./gradlew test
