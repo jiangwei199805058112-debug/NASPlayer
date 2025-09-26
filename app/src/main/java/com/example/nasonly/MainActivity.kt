@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
                 Surface {
                     val navController = rememberNavController()
                     NavGraph(
-                        startDestination = Routes.NAS_CONFIG,
+                        startDestination = Routes.NAS_DISCOVERY,
                         navController = navController
                     )
                 }
