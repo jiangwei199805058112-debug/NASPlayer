@@ -149,6 +149,35 @@ class MediaLibraryViewModel @Inject constructor(
             String.format("%02d:%02d", minutes, seconds)
         }
     }
+
+    fun loadPlaybackHistory() {
+        viewModelScope.launch {
+            try {
+                val historyList = playbackHistoryDao.getAll()
+                val historyItems = historyList.map { history ->
+                    val fileName = history.videoPath.substringAfterLast('/')
+                    val formattedTime = formatTimestamp(history.updatedAt)
+                    // Note: progressPercentage calculation requires video duration metadata
+                    // For now, using a placeholder calculation
+                    val progressPercentage = if (history.position > 0) 0.5f else 0f // Placeholder
+
+                    HistoryItem(
+                        id = history.id,
+                        path = history.videoPath,
+                        fileName = fileName,
+                        position = history.position,
+                        lastPlayed = formattedTime,
+                        progressPercentage = progressPercentage,
+                    )
+                }
+                _uiState.value = _uiState.value.copy(playbackHistory = historyItems)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "加载播放历史失败: ${e.message}",
+                )
+            }
+        }
+    }
 }
 
 data class MediaLibraryUiState(
