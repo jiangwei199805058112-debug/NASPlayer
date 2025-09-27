@@ -1,0 +1,26 @@
+name: Auto commit changes
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      # 在这里做你的修改/生成文件……
+      # 例如：运行脚本把文件移动到“该去的地方”
+      - name: Move misplaced files (example)
+        run: |
+          bash scripts/sync.sh  # 你自定义的搬运脚本
+
+      - name: Auto commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(ci): auto sync files [skip ci]"
+          # 只提交指定路径（可选）
+          # file_pattern: "app/src/** docs/**"
