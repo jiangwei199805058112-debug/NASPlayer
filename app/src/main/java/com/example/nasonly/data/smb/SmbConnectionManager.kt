@@ -301,6 +301,29 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
         return connect()
     }
 
+    /**
+     * 解析 SMB URL，提取相对于共享的路径
+     * 例如：smb://192.168.1.1/share/folder -> folder
+     * smb://192.168.1.1/share -> ""
+     */
+    private fun parseSmbPath(fullPath: String): String {
+        if (fullPath.startsWith("smb://")) {
+            try {
+                val uri = java.net.URI(fullPath)
+                val path = uri.path ?: return ""
+                // 路径格式：/share/relativePath
+                val firstSlash = path.indexOf('/')
+                if (firstSlash == -1) return ""
+                val secondSlash = path.indexOf('/', firstSlash + 1)
+                return if (secondSlash == -1) "" else path.substring(secondSlash + 1)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to parse SMB path: $fullPath", e)
+                return fullPath
+            }
+        }
+        return fullPath
+    }
+
     // 新增方法：列出目录内容
     suspend fun listDirectory(path: String = ""): List<SmbFileInfo> = withContext(Dispatchers.IO) {
         try {
@@ -317,17 +340,19 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                 return@withContext emptyList()
             }
 
-            Log.d(TAG, "Listing directory: $path using smbj")
+            // 解析 SMB URL，提取相对于共享的路径
+            val relativePath = parseSmbPath(path)
+            Log.d(TAG, "Listing directory: $path (relative: $relativePath) using smbj")
 
             val files = mutableListOf<SmbFileInfo>()
-            val directoryPath = if (path.isEmpty()) "*" else "$path/*"
+            val directoryPath = if (relativePath.isEmpty()) "*" else "$relativePath/*"
 
             currentShare.list(directoryPath).forEach { fileInfo ->
                 val fileName = fileInfo.fileName
                 val fileAttributes = fileInfo.fileAttributes
                 val isDirectory = (fileAttributes and 0x10L) != 0L // FILE_ATTRIBUTE_DIRECTORY
                 val fileSize = if (isDirectory) 0L else fileInfo.endOfFile
-                val fullPath = if (path.isEmpty()) fileName else "$path/$fileName"
+                val fullPath = if (relativePath.isEmpty()) fileName else "$relativePath/$fileName"
 
                 // 跳过 . 和 .. 目录
                 if (fileName != "." && fileName != "..") {
