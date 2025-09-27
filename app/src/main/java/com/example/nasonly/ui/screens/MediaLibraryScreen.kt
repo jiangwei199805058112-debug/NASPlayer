@@ -17,11 +17,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.nasonly.core.ui.components.ErrorDialog
 import com.example.nasonly.core.ui.components.LoadingIndicator
+import com.example.nasonly.navigation.Routes
 import com.example.nasonly.ui.components.EnhancedVideoList
 import com.example.nasonly.ui.components.SortOrder
 import com.example.nasonly.ui.components.VideoListToolbar
 import com.example.nasonly.ui.components.ViewMode
 import com.example.nasonly.ui.viewmodel.HistoryItem
+import timber.log.Timber
 import com.example.nasonly.ui.viewmodel.MediaLibraryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,7 +55,7 @@ fun MediaLibraryScreen(
             actions = {
                 IconButton(
                     onClick = {
-                        navController.navigate("playlist_management")
+                        navController.navigate(Routes.PLAYLIST_MANAGEMENT)
                     },
                 ) {
                     Icon(Icons.Default.List, contentDescription = "媒体库")
@@ -71,7 +73,7 @@ fun MediaLibraryScreen(
                 }
                 IconButton(
                     onClick = {
-                        navController.navigate("settings")
+                        navController.navigate(Routes.SETTINGS)
                     },
                 ) {
                     Icon(Icons.Default.Settings, contentDescription = "设置")
@@ -103,8 +105,12 @@ fun MediaLibraryScreen(
                         if (media.isDirectory) {
                             viewModel.navigateToFolder(media.path)
                         } else {
-                            val encodedUri = Uri.encode(media.path)
-                            navController.navigate("video_player?uri=$encodedUri")
+                            try {
+                                val encodedUri = Uri.encode(media.path)
+                                navController.navigate("video_player?uri=$encodedUri")
+                            } catch (e: Exception) {
+                                Timber.e(e, "Failed to navigate to video player for: ${media.path}")
+                            }
                         }
                     },
                     onRetry = { viewModel.refreshMediaFiles() },
@@ -117,8 +123,12 @@ fun MediaLibraryScreen(
                     historyItems = uiState.playbackHistory,
                     isLoading = uiState.isLoading,
                     onHistoryItemClick = { historyItem ->
-                        val encodedUri = Uri.encode(historyItem.path)
-                        navController.navigate("video_player?uri=$encodedUri")
+                        try {
+                            val encodedUri = Uri.encode(historyItem.path)
+                            navController.navigate("video_player?uri=$encodedUri")
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to navigate to video player for history item: ${historyItem.path}")
+                        }
                     },
                     onDeleteHistoryItem = { viewModel.deleteHistoryItem(it) },
                     onClearHistory = { viewModel.clearPlaybackHistory() },

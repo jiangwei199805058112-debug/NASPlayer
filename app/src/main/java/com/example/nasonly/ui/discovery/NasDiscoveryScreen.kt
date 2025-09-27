@@ -37,9 +37,13 @@ fun NasDiscoveryScreen(
                 is NasDiscoveryViewModel.NavEvent.ToLibrary -> {
                     val host = evt.host
                     Timber.i("Navigating to media for ${host.host} / ${host.share}")
-                    navController.navigate("media/${host.host}?share=${host.share}") {
-                        popUpTo("discovery") { inclusive = true }
-                        launchSingleTop = true
+                    try {
+                        navController.navigate("media/${host.host}?share=${host.share}") {
+                            popUpTo("discovery") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to navigate to media library for host: ${host.host}")
                     }
                 }
             }

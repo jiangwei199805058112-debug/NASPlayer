@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.nasonly.data.db.Playlist
 import com.example.nasonly.ui.viewmodel.PlaylistViewModel
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -116,7 +117,13 @@ fun PlaylistManagementScreen(
                 items(playlists) { playlist ->
                     PlaylistCard(
                         playlist = playlist,
-                        onPlay = { navController.navigate("playlist_detail/${playlist.id}") },
+                        onPlay = { 
+                            try {
+                                navController.navigate("playlist_detail/${playlist.id}")
+                            } catch (e: Exception) {
+                                Timber.e(e, "Failed to navigate to playlist detail: ${playlist.id}")
+                            }
+                        },
                         onEdit = {
                             selectedPlaylist = playlist
                             showEditDialog = true
