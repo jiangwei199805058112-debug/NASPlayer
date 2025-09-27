@@ -1,0 +1,53 @@
+name: Safe Auto Commit (Manual Only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_message:
+        description: 'Commit message'
+        required: true
+        default: 'Auto commit changes'
+      target_branch:
+        description: 'Target branch to commit to'
+        required: true
+        default: 'main'
+
+jobs:
+  safe-auto-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.inputs.target_branch }}
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for uncommitted changes
+        id: check_changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📝 Found uncommitted changes"
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "✅ No changes to commit"
+          fi
+
+      - name: Add and commit changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git add .
+          git commit -m "${{ github.event.inputs.commit_message }}"
+
+      - name: Push changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git push origin ${{ github.event.inputs.target_branch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
