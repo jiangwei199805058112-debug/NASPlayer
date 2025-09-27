@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import com.example.nasonly.core.ui.components.ErrorDialog
 import com.example.nasonly.navigation.Routes
 import com.example.nasonly.ui.viewmodel.NasConfigViewModel
+import timber.log.Timber
 
 data class SmbProtocol(val name: String, val value: String)
 data class SharedFolder(val name: String, val path: String, var isSelected: Boolean = false)
@@ -339,8 +340,12 @@ fun NasConfigScreen(
                     val selectedFolders = sharedFolders.filter { it.isSelected }
                     val shareString = selectedFolders.joinToString(",") { it.path }
                     viewModel.saveConfig(host, shareString, username, password, "", selectedSmbProtocol)
-                    navController.navigate(Routes.MEDIA_LIBRARY) {
-                        popUpTo(Routes.NAS_CONFIG) { inclusive = true }
+                    try {
+                        navController.navigate(Routes.MEDIA_LIBRARY) {
+                            popUpTo(Routes.NAS_CONFIG) { inclusive = true }
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to navigate to media library after config save")
                     }
                 },
                 modifier = Modifier.weight(1f),

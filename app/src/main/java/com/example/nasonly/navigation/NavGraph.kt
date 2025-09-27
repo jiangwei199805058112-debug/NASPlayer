@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.nasonly.ui.discovery.NasDiscoveryScreen
 import com.example.nasonly.ui.screens.EnhancedSettingsScreen
 import com.example.nasonly.ui.screens.MediaLibraryScreen
 import com.example.nasonly.ui.screens.NasConfigScreen
@@ -15,6 +16,7 @@ import com.example.nasonly.ui.screens.PlaylistDetailScreen
 import com.example.nasonly.ui.screens.PlaylistManagementScreen
 import com.example.nasonly.ui.screens.VideoPlayerScreen
 import com.example.nasonly.ui.startup.StartupScreen
+import timber.log.Timber
 
 @Composable
 fun NavGraph(
@@ -24,6 +26,9 @@ fun NavGraph(
     NavHost(navController = navController, startDestination = startDestination) {
         composable("startup") {
             StartupScreen(navController)
+        }
+        composable(Routes.NAS_DISCOVERY) {
+            NasDiscoveryScreen(navController)
         }
         composable(Routes.NAS_CONFIG) {
             NasConfigScreen(navController)
@@ -71,8 +76,12 @@ fun NavGraph(
                 playlistName = "播放列表", // 简化处理，实际应该从数据库获取
                 onNavigateBack = { navController.popBackStack() },
                 onPlayVideo = { videoPath ->
-                    val encodedUri = java.net.URLEncoder.encode(videoPath, "UTF-8")
-                    navController.navigate("video_player?uri=$encodedUri")
+                    try {
+                        val encodedUri = java.net.URLEncoder.encode(videoPath, "UTF-8")
+                        navController.navigate("video_player?uri=$encodedUri")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to navigate to video player from playlist: $videoPath")
+                    }
                 },
                 onAddVideos = {
                     // TODO: 实现添加视频功能
@@ -96,17 +105,33 @@ fun NavGraph(
 }
 
 fun NavHostController.navigateToVideoPlayer(smbPath: String) {
-    this.navigate("video_player?uri=${Uri.encode(smbPath)}")
+    try {
+        this.navigate("video_player?uri=${Uri.encode(smbPath)}")
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to navigate to video player with path: $smbPath")
+    }
 }
 
 fun NavHostController.goBack() {
-    this.popBackStack()
+    try {
+        this.popBackStack()
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to go back in navigation")
+    }
 }
 
 fun NavHostController.navigateToPlaylistManagement() {
-    this.navigate(Routes.PLAYLIST_MANAGEMENT)
+    try {
+        this.navigate(Routes.PLAYLIST_MANAGEMENT)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to navigate to playlist management")
+    }
 }
 
 fun NavHostController.navigateToPlaylistDetail(playlistId: Long) {
-    this.navigate("playlist_detail/$playlistId")
+    try {
+        this.navigate("playlist_detail/$playlistId")
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to navigate to playlist detail: $playlistId")
+    }
 }

@@ -9,6 +9,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.nasonly.navigation.Routes
+import com.example.nasonly.ui.startup.StartupViewModel
+import timber.log.Timber
 
 @Composable
 fun StartupScreen(
@@ -21,13 +23,29 @@ fun StartupScreen(
         when (startupState) {
             is StartupViewModel.StartupState.AutoConnect -> {
                 val host = (startupState as StartupViewModel.StartupState.AutoConnect).host
-                navController.navigate("media/${host.host}?share=${host.share}") {
-                    popUpTo("startup") { inclusive = true }
+                try {
+                    navController.navigate("media/${host.host}?share=${host.share}") {
+                        popUpTo("startup") { inclusive = true }
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to navigate to media library: ${host.host}")
+                    // 回退到发现屏幕
+                    try {
+                        navController.navigate(Routes.NAS_DISCOVERY) {
+                            popUpTo("startup") { inclusive = true }
+                        }
+                    } catch (navException: Exception) {
+                        Timber.e(navException, "Failed to navigate to discovery screen")
+                    }
                 }
             }
             StartupViewModel.StartupState.GoToDiscovery -> {
-                navController.navigate(Routes.NAS_DISCOVERY) {
-                    popUpTo("startup") { inclusive = true }
+                try {
+                    navController.navigate(Routes.NAS_DISCOVERY) {
+                        popUpTo("startup") { inclusive = true }
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to navigate to discovery screen")
                 }
             }
             StartupViewModel.StartupState.Checking -> {

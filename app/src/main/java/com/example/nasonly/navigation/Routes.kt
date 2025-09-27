@@ -7,6 +7,5 @@ object Routes {
     const val SETTINGS = "settings"
     const val PLAYLIST_MANAGEMENT = "playlist_management"
     const val PLAYLIST_DETAIL = "playlist_detail/{playlistId}"
-    const val PLAYLIST = "playlist/{playlistId}"
     const val VIDEO_PLAYER = "video_player?uri={uri}"
 }
