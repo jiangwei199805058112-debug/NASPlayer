@@ -34,7 +34,7 @@ Android NAS 播放器应用，支持 SMB 协议播放 NAS 设备上的视频文�
 - **Hilt**：依赖注入框架
 - **Room**：本地数据库存储
 - **ExoPlayer**：专业视频播放引擎
-- **JCIFS-NG**：SMB 协议支持
+- **SMBJ**：SMB 协议支持
 - **Coroutines**：异步编程
 
 ### 架构设计
@@ -56,3 +56,65 @@ Android NAS 播放器应用，支持 SMB 协议播放 NAS 设备上的视频文�
 - **自动保存**：播放进度自动保存到历史记录
 
 ## 🚀 开始使用
+
+### 环境要求
+
+- **Android Studio**：推荐使用最新稳定版
+- **Android SDK**：API 26 (Android 8.0) 及以上
+- **JDK**：版本 17
+
+### 构建步骤
+
+1. **克隆项目**
+
+   ```bash
+   git clone https://github.com/jiangwei199805058112-debug/NASPlayer.git
+   cd NASPlayer
+   ```
+
+2. **打开项目**
+   - 在 Android Studio 中打开项目
+
+3. **构建项目**
+
+   ```bash
+   ./gradlew assembleDebug
+   ```
+
+4. **运行应用**
+   - 连接 Android 设备或启动模拟器
+   - 在 Android Studio 中运行应用
+
+### 使用说明
+
+1. **连接 NAS 设备**
+   - 启动应用后，系统会自动发现网络中的 SMB 设备
+   - 或者手动输入 NAS 设备的 IP 地址和凭据
+
+2. **浏览文件**
+   - 在媒体文件标签页浏览 NAS 设备上的视频文件
+   - 支持文件夹导航
+
+3. **播放视频**
+   - 点击视频文件开始播放
+   - 支持全屏播放和手势控制
+
+4. **播放历史**
+   - 在播放历史标签页查看最近播放的视频
+   - 自动恢复播放进度
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+### 开发环境设置
+
+1. Fork 本项目
+2. 创建特性分支：`git checkout -b feature/AmazingFeature`
+3. 提交更改：`git commit -m 'Add some AmazingFeature'`
+4. 推送分支：`git push origin feature/AmazingFeature`
+5. 提交 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
