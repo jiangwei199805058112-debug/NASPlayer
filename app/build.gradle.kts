@@ -5,6 +5,7 @@ plugins {
     id("com.google.devtools.ksp")
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
+    id("jacoco")
 }
 
 android {
@@ -51,6 +52,41 @@ android {
             excludes += "/META-INF/versions/9/previous-compilation-data.bin"
         }
     }
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        "**/generated/**"
+    )
+
+    val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+    }
+
+    sourceDirectories.setFrom(files("${project.projectDir}/src/main/java"))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(buildDir) {
+        include("jacoco/testDebugUnitTest.exec")
+        include("outputs/code_coverage/debugAndroidTest/connected/**/*.ec")
+    })
 }
 
 dependencies {

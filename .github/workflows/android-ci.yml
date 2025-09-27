@@ -79,6 +79,16 @@ jobs:
       shell: powershell
       if: success() || failure()
 
+    - name: Generate Coverage Report
+      run: |
+        if (Test-Path "./gradlew.bat") {
+          .\gradlew.bat jacocoTestReport --stacktrace --no-daemon
+        } else {
+          .\gradlew jacocoTestReport --stacktrace --no-daemon
+        }
+      shell: powershell
+      if: success() || failure()
+
     - name: Start Android Emulator
       run: |
         Write-Host "Starting testAVD emulator..."
@@ -146,3 +156,10 @@ jobs:
         path: |
           app/build/reports/
           app/build/test-results/
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: app/build/reports/jacoco/jacocoTestReport/html/
