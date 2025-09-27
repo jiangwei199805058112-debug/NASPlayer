@@ -27,6 +27,7 @@ fun NasDiscoveryScreen(
     viewModel: NasDiscoveryViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val discoveryState by viewModel.discoveryState.collectAsState()
     var showConnectionDialog by remember { mutableStateOf<DeviceInfo?>(null) }
 
     /** 收集一次性导航事件：保证在主线程里执行 navigate */
@@ -64,21 +65,21 @@ fun NasDiscoveryScreen(
 
             Button(
                 onClick = {
-                    if (viewModel.discoveryState.value.isDiscovering) {
+                    if (discoveryState.isDiscovering) {
                         viewModel.stopDiscovery()
                     } else {
                         viewModel.startDiscovery()
                     }
                 },
-                enabled = !viewModel.discoveryState.value.isConnecting,
+                enabled = !discoveryState.isConnecting,
             ) {
                 Icon(
-                    imageVector = if (viewModel.discoveryState.value.isDiscovering) Icons.Default.Settings else Icons.Default.Search,
+                    imageVector = if (discoveryState.isDiscovering) Icons.Default.Settings else Icons.Default.Search,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(if (viewModel.discoveryState.value.isDiscovering) "停止发现" else "开始发现")
+                Text(if (discoveryState.isDiscovering) "停止发现" else "开始发现")
             }
         }
 
@@ -154,8 +155,7 @@ fun NasDiscoveryScreen(
             }
             NasDiscoveryViewModel.UiState.Idle -> {
                 // 显示发现的设备
-                val state = viewModel.discoveryState.value
-                if (state.isDiscovering) {
+                if (discoveryState.isDiscovering) {
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier
@@ -170,9 +170,9 @@ fun NasDiscoveryScreen(
                     }
                 }
 
-                if (state.devices.isNotEmpty()) {
+                if (discoveryState.devices.isNotEmpty()) {
                     Text(
-                        text = "发现的设备 (${state.devices.size})",
+                        text = "发现的设备 (${discoveryState.devices.size})",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                     )
@@ -182,10 +182,10 @@ fun NasDiscoveryScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(state.devices) { device ->
+                    items(discoveryState.devices) { device ->
                         DeviceCard(
                             device = device,
-                            isConnecting = state.isConnecting,
+                            isConnecting = discoveryState.isConnecting,
                             onConnect = { showConnectionDialog = device },
                         )
                     }
