@@ -59,11 +59,14 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                 try {
                     val share = session.connectShare(shareName) as? DiskShare
                     if (share != null) {
-                        // Try to list root to verify access
-                                                val dir = share.openDirectory("\\", emptySet(), null, com.hierynomus.mssmb2.SMB2ShareAccess.ALL, null, emptySet())
-                        dir.list()
+                        // Try to list root to verify access and check if share has content
+                        val dir = share.openDirectory("\\", emptySet(), null, com.hierynomus.mssmb2.SMB2ShareAccess.ALL, null, emptySet())
+                        val files = dir.list()
                         dir.close()
-                        foundShares.add(SmbShareInfo(shareName, "DISK", ""))
+                        // Only add share if it has actual content (not just empty virtual shares)
+                        if (files.isNotEmpty()) {
+                            foundShares.add(SmbShareInfo(shareName, "DISK", ""))
+                        }
                         share.close()
                     }
                 } catch (e: Exception) {
