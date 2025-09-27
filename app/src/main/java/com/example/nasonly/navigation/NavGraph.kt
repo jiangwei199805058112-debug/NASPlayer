@@ -27,7 +27,7 @@ fun NavGraph(
         composable("startup") {
             StartupScreen(navController)
         }
-        composable(Routes.NAS_DISCOVERY) {
+        composable("nas_discovery") {
             NasDiscoveryScreen(navController)
         }
         composable(Routes.NAS_CONFIG) {

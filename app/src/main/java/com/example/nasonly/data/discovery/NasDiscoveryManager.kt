@@ -68,19 +68,27 @@ class NasDiscoveryManager @Inject constructor(
             val dedup = ConcurrentHashMap.newKeySet<String>()
             suspend fun emitAll(list: List<NasDevice>) {
                 list.forEach { dev ->
-                    val key = dev.ip.hostAddress!!
-                    if (dedup.add(key)) {
-                        send(dev)
-                        Log.d(TAG, "Discovered device: ${dev.name ?: "Unknown"} at ${dev.ip.hostAddress}")
+                    try {
+                        val key = dev.ip.hostAddress!!
+                        if (dedup.add(key)) {
+                            send(dev)
+                            Log.d(TAG, "Discovered device: ${dev.name ?: "Unknown"} at ${dev.ip.hostAddress}")
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to emit device ${dev.ip.hostAddress}: ${e.message}")
                     }
                 }
             }
-            withTimeout(OVERALL_TIMEOUT) {
-                coroutineScope {
-                    launch { emitAll(mdnsProbe()) }
-                    launch { emitAll(netbiosProbe()) }
-                    launch { emitAll(portProbe()) }
+            try {
+                withTimeout(OVERALL_TIMEOUT) {
+                    coroutineScope {
+                        launch { emitAll(mdnsProbe()) }
+                        launch { emitAll(netbiosProbe()) }
+                        launch { emitAll(portProbe()) }
+                    }
                 }
+            } catch (e: Exception) {
+                Log.w(TAG, "Discovery failed: ${e.message}")
             }
         }
     }

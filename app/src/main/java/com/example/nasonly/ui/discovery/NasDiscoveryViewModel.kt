@@ -58,7 +58,10 @@ class NasDiscoveryViewModel @Inject constructor(
      * 开始发现NAS设备
      */
     fun startDiscovery() {
-        if (discoveryJob?.isActive == true) return
+        if (discoveryJob?.isActive == true) {
+            Timber.d("Discovery already in progress, ignoring start request")
+            return
+        }
 
         _discoveryState.value = DiscoveryUiState(isDiscovering = true, devices = emptyList(), error = null)
         discoveryManager.acquireMulticastLock()
@@ -69,7 +72,8 @@ class NasDiscoveryViewModel @Inject constructor(
                     .collect { devices ->
                         _discoveryState.value = _discoveryState.value.copy(devices = devices)
                     }
-            } catch (e: Exception) {
+                Timber.d("Discovery completed successfully")
+            } catch (e: Throwable) {
                 Timber.w(e, "Discovery failed")
                 _discoveryState.value = _discoveryState.value.copy(
                     isDiscovering = false,
@@ -78,6 +82,7 @@ class NasDiscoveryViewModel @Inject constructor(
             } finally {
                 _discoveryState.value = _discoveryState.value.copy(isDiscovering = false)
                 discoveryManager.releaseMulticastLock()
+                Timber.d("Discovery job finished")
             }
         }
     }
@@ -86,6 +91,7 @@ class NasDiscoveryViewModel @Inject constructor(
      * 停止发现
      */
     fun stopDiscovery() {
+        Timber.d("Stopping discovery")
         discoveryJob?.cancel()
         discoveryJob = null
         _discoveryState.value = _discoveryState.value.copy(isDiscovering = false)

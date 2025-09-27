@@ -108,7 +108,7 @@ fun MediaLibraryScreen(
                             try {
                                 val encodedUri = Uri.encode(media.path)
                                 navController.navigate("video_player?uri=$encodedUri")
-                            } catch (e: Exception) {
+                            } catch (e: IllegalArgumentException) {
                                 Timber.e(e, "Failed to navigate to video player for: ${media.path}")
                             }
                         }
@@ -126,7 +126,7 @@ fun MediaLibraryScreen(
                         try {
                             val encodedUri = Uri.encode(historyItem.path)
                             navController.navigate("video_player?uri=$encodedUri")
-                        } catch (e: Exception) {
+                        } catch (e: IllegalArgumentException) {
                             Timber.e(e, "Failed to navigate to video player for history item: ${historyItem.path}")
                         }
                     },
