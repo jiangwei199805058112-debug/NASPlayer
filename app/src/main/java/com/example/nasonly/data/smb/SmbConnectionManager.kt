@@ -433,6 +433,11 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                 val fileSize = if (isDirectory) 0L else fileInfo.endOfFile
                 val fullPath = if (dir.isEmpty()) fileName else "$dir/$fileName"
                 if (fileName != "." && fileName != "..") {
+                    // Filter out known empty virtual directories on WD My Cloud
+                    if (isDirectory && (fileName == "Shared Music" || fileName == "Shared Pictures" || fileName == "Shared Videos")) {
+                        // Skip these empty virtual directories
+                        return@forEach
+                    }
                     files.add(SmbFileInfo(fileName, fullPath, fileSize, isDirectory))
                 }
             }
