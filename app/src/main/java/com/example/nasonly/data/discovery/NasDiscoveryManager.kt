@@ -26,8 +26,8 @@ class NasDiscoveryManager @Inject constructor(
         private const val MDNS_PORT = 5353
         private const val NETBIOS_PORT = 137
         private const val SMB_PORT = 445
-        private const val DISCOVERY_TIMEOUT = 5000L // 5秒每路
-        private const val OVERALL_TIMEOUT = 6000L // 整体6秒
+        private const val DISCOVERY_TIMEOUT = 3000L // 3秒每路，减少总时间
+        private const val OVERALL_TIMEOUT = 4000L // 整体4秒，减少总时间
     }
 
     private val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
@@ -109,6 +109,7 @@ class NasDiscoveryManager @Inject constructor(
         val socket = MulticastSocket(MDNS_PORT)
         try {
             socket.joinGroup(InetAddress.getByName("224.0.0.251"))
+            socket.soTimeout = 1000 // 1秒超时，减少阻塞时间
 
             val query = byteArrayOf(
                 // DNS 查询头部
@@ -132,14 +133,21 @@ class NasDiscoveryManager @Inject constructor(
             val buffer = ByteArray(4096)
             val packet = DatagramPacket(buffer, buffer.size)
 
-            withTimeout(DISCOVERY_TIMEOUT) {
-                while (true) {
+            // 使用更安全的循环，避免长时间阻塞
+            val startTime = System.currentTimeMillis()
+            var receiveCount = 0
+            while (System.currentTimeMillis() - startTime < DISCOVERY_TIMEOUT && receiveCount < 10) {
+                try {
                     socket.receive(packet)
+                    receiveCount++
                     // 简单解析响应，提取IP（实际实现需要完整DNS解析）
                     val ip = packet.address
                     if (ip.isSiteLocalAddress) {
                         devices.add(NasDevice(ip, "SMB Device", true))
                     }
+                } catch (e: Exception) {
+                    // Socket超时或其他错误，跳出循环
+                    break
                 }
             }
         } catch (e: Exception) {
@@ -158,6 +166,7 @@ class NasDiscoveryManager @Inject constructor(
         val socket = DatagramSocket()
         try {
             socket.broadcast = true
+            socket.soTimeout = 1000 // 1秒超时，减少阻塞时间
 
             val query = byteArrayOf(
                 // NetBIOS Name Query
@@ -183,13 +192,20 @@ class NasDiscoveryManager @Inject constructor(
             val buffer = ByteArray(4096)
             val packet = DatagramPacket(buffer, buffer.size)
 
-            withTimeout(DISCOVERY_TIMEOUT) {
-                while (true) {
+            // 使用更安全的循环，避免长时间阻塞
+            val startTime = System.currentTimeMillis()
+            var receiveCount = 0
+            while (System.currentTimeMillis() - startTime < DISCOVERY_TIMEOUT && receiveCount < 5) {
+                try {
                     socket.receive(packet)
+                    receiveCount++
                     val ip = packet.address
                     if (ip.isSiteLocalAddress) {
                         devices.add(NasDevice(ip, "NetBIOS Device", true))
                     }
+                } catch (e: Exception) {
+                    // Socket超时或其他错误，跳出循环
+                    break
                 }
             }
         } catch (e: Exception) {
