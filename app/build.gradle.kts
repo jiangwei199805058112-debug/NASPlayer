@@ -118,6 +118,7 @@ dependencies {
 
     // SMB
     implementation(libs.smbj)
+    implementation("eu.agno3.jcifs:jcifs-ng:2.1.10")
 
     // Coroutines
     implementation(libs.coroutines.core)

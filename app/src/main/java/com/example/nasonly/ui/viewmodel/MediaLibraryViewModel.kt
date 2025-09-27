@@ -3,6 +3,9 @@ package com.example.nasonly.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nasonly.data.db.PlaybackHistoryDao
+import com.example.nasonly.data.remote.smb.RemoteVideo
+import com.example.nasonly.data.remote.smb.SmbCredentials
+import com.example.nasonly.data.remote.smb.SmbScanner
 import com.example.nasonly.data.smb.SmbFileInfo
 import com.example.nasonly.repository.SmbRepository
 import com.example.nasonly.ui.screens.MediaItem
@@ -18,6 +21,7 @@ import javax.inject.Inject
 class MediaLibraryViewModel @Inject constructor(
     private val smbRepository: SmbRepository,
     private val playbackHistoryDao: PlaybackHistoryDao,
+    private val smbScanner: SmbScanner,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MediaLibraryUiState())
     val uiState: StateFlow<MediaLibraryUiState> = _uiState
@@ -81,31 +85,22 @@ class MediaLibraryViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(error = null)
     }
 
-    fun loadPlaybackHistory() {
+    fun scanExample() {
         viewModelScope.launch {
-            try {
-                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                val history = playbackHistoryDao.getAll()
-                val historyItems = history.sortedByDescending { it.updatedAt }.map { item ->
-                    HistoryItem(
-                        id = item.id,
-                        path = item.videoPath,
-                        fileName = item.videoPath.substringAfterLast("/"),
-                        position = item.position,
-                        lastPlayed = formatTimestamp(item.updatedAt),
-                        progressPercentage = 0f, // 需要视频总时长来计算，暂时设为0
-                    )
-                }
-                _uiState.value = _uiState.value.copy(
-                    playbackHistory = historyItems,
-                    isLoading = false,
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = "加载播放历史失败: ${e.message}",
-                    isLoading = false,
-                )
+            val list = smbScanner.scanVideos(
+                rootPath = "\\\\Mycloudpr2100\\备份文件\\20250606美术馆",
+                creds = SmbCredentials(username = "guest", password = "")
+            ) { found ->
+                // stream results to UI if needed
+                // Log.d("SMB", "Found: ${found.name}")
             }
+            // Update UI state with found videos
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                files = list.map { RemoteVideo ->
+                    SmbFileInfo(RemoteVideo.name, RemoteVideo.smbUrl, RemoteVideo.size, false)
+                }
+            )
         }
     }
 
