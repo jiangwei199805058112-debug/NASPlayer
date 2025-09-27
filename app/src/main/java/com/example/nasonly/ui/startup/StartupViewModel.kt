@@ -45,20 +45,26 @@ class StartupViewModel @Inject constructor(
                     domain = "",
                 )
 
-                runCatching {
-                    smb.connect(
-                        host = host.host,
-                        share = host.share,
-                        username = host.username,
-                        password = host.password,
-                        domain = host.domain,
-                    )
-                }.onSuccess {
-                    Timber.i("Auto-connected to last NAS: $host")
-                    _startupState.value = StartupState.AutoConnect(host)
-                }.onFailure { e ->
-                    Timber.w(e, "Auto-connect failed for $host")
+                // 如果密码为空，跳过自动连接，直接进入发现页面
+                if (host.password.isEmpty()) {
+                    Timber.i("Skipping auto-connect due to empty password for host: $host")
                     _startupState.value = StartupState.GoToDiscovery
+                } else {
+                    runCatching {
+                        smb.connect(
+                            host = host.host,
+                            share = host.share,
+                            username = host.username,
+                            password = host.password,
+                            domain = host.domain,
+                        )
+                    }.onSuccess {
+                        Timber.i("Auto-connected to last NAS: $host")
+                        _startupState.value = StartupState.AutoConnect(host)
+                    }.onFailure { e ->
+                        Timber.w(e, "Auto-connect failed for $host")
+                        _startupState.value = StartupState.GoToDiscovery
+                    }
                 }
             } else {
                 _startupState.value = StartupState.GoToDiscovery
