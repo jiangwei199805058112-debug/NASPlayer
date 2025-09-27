@@ -11,7 +11,7 @@ on:
 jobs:
   sonar:
     name: SonarQube Analysis
-    runs-on: ubuntu-latest
+    runs-on: self-hosted   # ✅ 改这里，使用本地 Runner
 
     steps:
       - uses: actions/checkout@v3

@@ -118,4 +118,3 @@ Android NAS 播放器应用，支持 SMB 协议播放 NAS 设备上的视频文�
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-Trigger SonarQube workflow
