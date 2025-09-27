@@ -54,6 +54,12 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        force("org.bouncycastle:bcprov-jdk18on:1.76")
+    }
+}
+
 jacoco {
     toolVersion = "0.8.11"
 }
