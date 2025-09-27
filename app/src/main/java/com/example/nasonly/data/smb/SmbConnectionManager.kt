@@ -15,7 +15,6 @@ import com.hierynomus.mssmb2.SMB2CreateDisposition
 import com.hierynomus.mssmb2.SMB2CreateOptions
 import com.hierynomus.mssmb2.SMB2ShareAccess
 import com.hierynomus.mssmb2.SMBApiException
-import com.hierynomus.mssmb2.SMB2ImpersonationLevel
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -24,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.hierynomus.smbj.share.File as SmbFile
+import java.lang.reflect.Method
 
 @Singleton
 class SmbConnectionManager @Inject constructor() : SmbManager {
@@ -416,11 +416,13 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             Log.d(TAG, "Listing directory: $shareName/$relativePath using smbj")
             val files = mutableListOf<SmbFileInfo>()
             val dir = if (relativePath.isEmpty()) "" else relativePath
+            val desiredAccess = EnumSet.of(AccessMask.GENERIC_READ)
             val createDisposition = EnumSet.of(SMB2CreateDisposition.FILE_OPEN)
             val createOptions = EnumSet.of(SMB2CreateOptions.FILE_DIRECTORY_FILE)
             val shareAccess = SMB2ShareAccess.ALL
             val fileAttributes = EnumSet.noneOf(FileAttributes::class.java)
-            val dirHandle = currentShare.openDirectory(dir, createDisposition, createOptions, shareAccess, null, fileAttributes)
+            val method = DiskShare::class.java.declaredMethods.find { it.name == "openDirectory" && it.parameterCount == 6 }
+            val dirHandle = method?.invoke(currentShare, dir, createDisposition, createOptions, shareAccess, null, fileAttributes) as com.hierynomus.smbj.share.Directory
             dirHandle.list().forEach { fileInfo ->
                 val fileName = fileInfo.fileName
                 val fileAttributes = fileInfo.fileAttributes
