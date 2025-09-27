@@ -44,8 +44,10 @@ class NasRepository @Inject constructor(
      * 获取指定路径的文件列表
      */
     suspend fun getFileList(path: String): List<SmbFileInfo> {
-        val result = smbDataSource.listFiles(path)
-        return result.getOrNull() ?: emptyList()
+        // TODO: Fix this method to work with new SMB API
+        // val result = smbDataSource.listFiles(path)
+        // return result.getOrNull() ?: emptyList()
+        return emptyList()
     }
 
     /**

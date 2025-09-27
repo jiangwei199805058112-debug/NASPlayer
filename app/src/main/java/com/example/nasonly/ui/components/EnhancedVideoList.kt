@@ -28,7 +28,52 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.nasonly.R
-import com.example.nasonly.data.smb.SmbFileInfo
+import com.example.nasonly.data.smb.SmbFileWithMetadata
+
+// 扩展属性用于计算视频文件相关信息
+val SmbFileWithMetadata.isVideoFile: Boolean
+    get() = !file.isDirectory && file.name.lowercase().run {
+        endsWith(".mp4") || endsWith(".mkv") || endsWith(".avi") ||
+        endsWith(".mov") || endsWith(".wmv") || endsWith(".flv") ||
+        endsWith(".webm") || endsWith(".m4v") || endsWith(".3gp")
+    }
+
+val SmbFileWithMetadata.thumbnailPath: String?
+    get() = null // TODO: 实现缩略图路径获取
+
+val SmbFileWithMetadata.displayDuration: String
+    get() = metadata?.duration?.let { duration ->
+        val hours = duration / 3600000
+        val minutes = (duration % 3600000) / 60000
+        val seconds = (duration % 60000) / 1000
+        when {
+            hours > 0 -> String.format("%d:%02d:%02d", hours, minutes, seconds)
+            else -> String.format("%d:%02d", minutes, seconds)
+        }
+    } ?: ""
+
+val SmbFileWithMetadata.resolution: String
+    get() = metadata?.let { "${it.width}x${it.height}" } ?: ""
+
+val SmbFileWithMetadata.displaySize: String
+    get() = when {
+        file.size < 1024 -> "${file.size} B"
+        file.size < 1024 * 1024 -> "${file.size / 1024} KB"
+        file.size < 1024 * 1024 * 1024 -> "${file.size / (1024 * 1024)} MB"
+        else -> "${file.size / (1024 * 1024 * 1024)} GB"
+    }
+
+val SmbFileWithMetadata.displayBitrate: String
+    get() = metadata?.bitrate?.let { bitrate ->
+        when {
+            bitrate < 1000 -> "${bitrate} bps"
+            bitrate < 1000 * 1000 -> "${bitrate / 1000} Kbps"
+            else -> "${bitrate / (1000 * 1000)} Mbps"
+        }
+    } ?: ""
+
+val SmbFileWithMetadata.codecName: String?
+    get() = metadata?.codecName
 
 enum class SortOrder {
     NAME_ASC, NAME_DESC,
@@ -43,25 +88,25 @@ enum class ViewMode {
 
 @Composable
 fun EnhancedVideoList(
-    files: List<SmbFileInfo>,
+    files: List<SmbFileWithMetadata>,
     showThumbnails: Boolean = true,
     viewMode: ViewMode = ViewMode.LIST,
     sortOrder: SortOrder = SortOrder.NAME_ASC,
-    onFileClick: (SmbFileInfo) -> Unit,
-    onFileLongClick: (SmbFileInfo) -> Unit = {},
-    onAddToPlaylist: (SmbFileInfo) -> Unit = {},
+    onFileClick: (SmbFileWithMetadata) -> Unit,
+    onFileLongClick: (SmbFileWithMetadata) -> Unit = {},
+    onAddToPlaylist: (SmbFileWithMetadata) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val sortedFiles = remember(files, sortOrder) {
         when (sortOrder) {
-            SortOrder.NAME_ASC -> files.sortedBy { it.name.lowercase() }
-            SortOrder.NAME_DESC -> files.sortedByDescending { it.name.lowercase() }
-            SortOrder.DATE_ASC -> files.sortedBy { it.lastModified }
-            SortOrder.DATE_DESC -> files.sortedByDescending { it.lastModified }
-            SortOrder.SIZE_ASC -> files.sortedBy { it.size }
-            SortOrder.SIZE_DESC -> files.sortedByDescending { it.size }
-            SortOrder.DURATION_ASC -> files.sortedBy { it.duration }
-            SortOrder.DURATION_DESC -> files.sortedByDescending { it.duration }
+            SortOrder.NAME_ASC -> files.sortedBy { it.file.name.lowercase() }
+            SortOrder.NAME_DESC -> files.sortedByDescending { it.file.name.lowercase() }
+            SortOrder.DATE_ASC -> files.sortedBy { it.file.lastModified }
+            SortOrder.DATE_DESC -> files.sortedByDescending { it.file.lastModified }
+            SortOrder.SIZE_ASC -> files.sortedBy { it.file.size }
+            SortOrder.SIZE_DESC -> files.sortedByDescending { it.file.size }
+            SortOrder.DURATION_ASC -> files.sortedBy { it.metadata?.duration ?: 0L }
+            SortOrder.DURATION_DESC -> files.sortedByDescending { it.metadata?.duration ?: 0L }
         }
     }
 
@@ -108,7 +153,7 @@ fun EnhancedVideoList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnhancedVideoListItem(
-    file: SmbFileInfo,
+    file: SmbFileWithMetadata,
     showThumbnail: Boolean = true,
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
@@ -186,8 +231,8 @@ fun EnhancedVideoListItem(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        if (file.isDirectory) Icons.Default.Folder else Icons.Default.VideoFile,
-                        contentDescription = if (file.isDirectory) "文件夹" else "视频文件",
+                        if (file.file.isDirectory) Icons.Default.Folder else Icons.Default.VideoFile,
+                        contentDescription = if (file.file.isDirectory) "文件夹" else "视频文件",
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
@@ -199,14 +244,19 @@ fun EnhancedVideoListItem(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = file.name,
+                    text = file.file.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                if (file.isVideoFile) {
+                if (!file.file.isDirectory) {
+                    val isVideoFile = file.file.name.lowercase().run {
+                        endsWith(".mp4") || endsWith(".mkv") || endsWith(".avi") ||
+                        endsWith(".mov") || endsWith(".wmv") || endsWith(".flv") ||
+                        endsWith(".webm") || endsWith(".m4v") || endsWith(".3gp")
+                    }
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -238,7 +288,7 @@ fun EnhancedVideoListItem(
                         item {
                             if (file.codecName != null) {
                                 VideoInfoChip(
-                                    text = file.codecName,
+                                    text = file.codecName!!,
                                     icon = Icons.Default.Code,
                                 )
                             }
@@ -246,7 +296,7 @@ fun EnhancedVideoListItem(
                     }
                 } else {
                     Text(
-                        text = if (file.isDirectory) "文件夹" else file.displaySize,
+                        text = if (file.file.isDirectory) "文件夹" else file.displaySize,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -295,7 +345,7 @@ fun EnhancedVideoListItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnhancedVideoGridItem(
-    file: SmbFileInfo,
+    file: SmbFileWithMetadata,
     showThumbnail: Boolean = true,
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
@@ -333,8 +383,8 @@ fun EnhancedVideoGridItem(
                     )
                 } else {
                     Icon(
-                        if (file.isDirectory) Icons.Default.Folder else Icons.Default.VideoFile,
-                        contentDescription = if (file.isDirectory) "文件夹" else "视频文件",
+                        if (file.file.isDirectory) Icons.Default.Folder else Icons.Default.VideoFile,
+                        contentDescription = if (file.file.isDirectory) "文件夹" else "视频文件",
                         modifier = Modifier.size(48.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -422,7 +472,7 @@ fun EnhancedVideoGridItem(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = file.name,
+                    text = file.file.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
@@ -454,7 +504,7 @@ fun EnhancedVideoGridItem(
                     }
                 } else {
                     Text(
-                        text = if (file.isDirectory) "文件夹" else file.displaySize,
+                        text = if (file.file.isDirectory) "文件夹" else file.displaySize,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

@@ -2,6 +2,7 @@ package com.example.nasonly.data.smb
 
 import android.util.Log
 import com.example.nasonly.data.media.VideoMetadataExtractor
+import com.example.nasonly.data.smb.SmbFileWithMetadata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -12,8 +13,25 @@ import javax.inject.Singleton
 @Singleton
 class SmbDataSource @Inject constructor(
     private val smbManager: SmbManager,
+    private val smbConnectionManager: SmbConnectionManager,
     private val videoMetadataExtractor: VideoMetadataExtractor,
 ) {
+    /**
+     * 枚举顶层共享列表
+     */
+    suspend fun listShares(host: String, creds: SmbCredentials): Result<List<SmbShareInfo>> = withContext(Dispatchers.IO) {
+        try {
+            if (smbManager is SmbConnectionManager) {
+                val shares = smbManager.listShares(host, creds)
+                Result.success(shares)
+            } else {
+                Result.failure(IOException("SMB manager is not SmbConnectionManager"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error listing shares", e)
+            Result.failure(e)
+        }
+    }
     companion object {
         private const val TAG = "SmbDataSource"
         private const val MAX_RETRY_COUNT = 3
@@ -82,26 +100,21 @@ class SmbDataSource @Inject constructor(
         }
     }
 
-    suspend fun listFiles(directoryPath: String): Result<List<SmbFileInfo>> = withContext(Dispatchers.IO) {
+    suspend fun listFiles(shareName: String, relativePath: String = ""): Result<List<SmbFileInfo>> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Listing files in directory: $directoryPath")
-
+            Log.d(TAG, "Listing files in share: $shareName, path: $relativePath")
             if (!smbManager.isConnected()) {
                 Log.d(TAG, "SMB not connected, attempting to connect...")
                 if (!smbManager.connect()) {
                     return@withContext Result.failure(IOException("无法连接到 SMB 服务器"))
                 }
             }
-
-            // 使用真实的 SMB 文件列表获取逻辑
             val files = if (smbManager is SmbConnectionManager) {
-                smbManager.listDirectory(directoryPath)
+                smbManager.listDirectory(shareName, relativePath)
             } else {
-                // 如果不是我们的实现，返回空列表
                 Log.w(TAG, "SMB manager is not SmbConnectionManager, cannot list directory")
                 emptyList()
             }
-
             Log.d(TAG, "Found ${files.size} files/folders")
             Result.success(files)
         } catch (e: Exception) {
@@ -110,64 +123,48 @@ class SmbDataSource @Inject constructor(
         }
     }
 
-    /**
-     * 获取增强的文件信息，包含视频元数据和缩略图
-     */
     suspend fun listFilesWithMetadata(
-        directoryPath: String,
+        shareName: String,
+        relativePath: String = "",
         includeMetadata: Boolean = true,
         generateThumbnails: Boolean = true,
-    ): Result<List<SmbFileInfo>> = withContext(Dispatchers.IO) {
+    ): Result<List<SmbFileWithMetadata>> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Listing files with metadata in directory: $directoryPath")
-
-            // 首先获取基本文件信息
-            val basicFilesResult = listFiles(directoryPath)
-            if (basicFilesResult.isFailure) {
-                return@withContext basicFilesResult
-            }
-
-            val basicFiles = basicFilesResult.getOrNull() ?: emptyList()
-            val enhancedFiles = mutableListOf<SmbFileInfo>()
-
+            Log.d(TAG, "Listing files with metadata in share: $shareName, path: $relativePath")
+            // 直接使用SmbConnectionManager列出文件
+            val basicFiles = smbConnectionManager.listDirectory(shareName, relativePath)
+            val enhancedFiles = mutableListOf<SmbFileWithMetadata>()
             for (fileInfo in basicFiles) {
-                var enhancedFile = fileInfo
-
-                // 如果是视频文件且需要元数据
-                if (fileInfo.isVideoFile && includeMetadata) {
+                val isVideoFile = !fileInfo.isDirectory && fileInfo.name.lowercase().let { name ->
+                    name.endsWith(".mp4") || name.endsWith(".mkv") || name.endsWith(".avi") ||
+                    name.endsWith(".mov") || name.endsWith(".wmv") || name.endsWith(".flv") ||
+                    name.endsWith(".webm") || name.endsWith(".m4v") || name.endsWith(".3gp")
+                }
+                val metadata = if (isVideoFile && includeMetadata) {
                     try {
-                        val metadata = videoMetadataExtractor.extractMetadata(fileInfo.path)
-                        var thumbnailPath: String? = null
-
-                        // 生成缩略图
-                        if (generateThumbnails) {
-                            thumbnailPath = videoMetadataExtractor.generateThumbnail(fileInfo.path)
-                        }
-
-                        enhancedFile = fileInfo.copy(
-                            duration = metadata.duration,
-                            thumbnailPath = thumbnailPath,
-                            videoWidth = metadata.width,
-                            videoHeight = metadata.height,
-                            frameRate = metadata.frameRate,
-                            bitrate = metadata.bitrate,
-                            codecName = metadata.codecName,
-                            audioChannels = metadata.audioChannels,
-                            audioSampleRate = metadata.audioSampleRate,
-                        )
+                        videoMetadataExtractor.extractMetadata(fileInfo.path)
                     } catch (e: Exception) {
                         Log.w(TAG, "Failed to extract metadata for ${fileInfo.path}", e)
-                        // 使用原始文件信息
+                        null
                     }
-                }
+                } else null
 
-                enhancedFiles.add(enhancedFile)
+                val smbFile = SmbFile(
+                    name = fileInfo.name,
+                    isDirectory = fileInfo.isDirectory,
+                    size = fileInfo.size,
+                    lastModified = java.util.Date(), // TODO: 从SMB获取实际修改时间
+                    fullPath = fileInfo.path
+                )
+
+                enhancedFiles.add(SmbFileWithMetadata(
+                    file = smbFile,
+                    metadata = metadata
+                ))
             }
-
             Log.d(TAG, "Enhanced ${enhancedFiles.size} files with metadata")
             Result.success(enhancedFiles)
         } catch (e: Exception) {
-            Log.e(TAG, "Error listing files with metadata", e)
             Result.failure(e)
         }
     }
@@ -180,67 +177,4 @@ class SmbDataSource @Inject constructor(
             Log.w(TAG, "Error closing SMB data source: ${e.message}")
         }
     }
-}
-
-data class SmbFileInfo(
-    val name: String,
-    val path: String,
-    val size: Long,
-    val isDirectory: Boolean,
-    val lastModified: Long = 0L,
-    val duration: Long = 0L,
-    val thumbnailPath: String? = null,
-    val videoWidth: Int = 0,
-    val videoHeight: Int = 0,
-    val frameRate: Float = 0f,
-    val bitrate: Long = 0L,
-    val codecName: String? = null,
-    val audioChannels: Int = 0,
-    val audioSampleRate: Int = 0,
-) {
-    val isVideoFile: Boolean
-        get() = !isDirectory && name.lowercase().run {
-            endsWith(".mp4") || endsWith(".mkv") || endsWith(".avi") ||
-                endsWith(".mov") || endsWith(".wmv") || endsWith(".flv") ||
-                endsWith(".webm") || endsWith(".m4v") || endsWith(".3gp")
-        }
-
-    val displaySize: String
-        get() = when {
-            size < 1024 -> "$size B"
-            size < 1024 * 1024 -> "%.1f KB".format(size / 1024.0)
-            size < 1024 * 1024 * 1024 -> "%.1f MB".format(size / (1024.0 * 1024.0))
-            else -> "%.1f GB".format(size / (1024.0 * 1024.0 * 1024.0))
-        }
-
-    val displayDuration: String
-        get() = if (duration > 0) {
-            val hours = duration / 3600000
-            val minutes = (duration % 3600000) / 60000
-            val seconds = (duration % 60000) / 1000
-            when {
-                hours > 0 -> "%d:%02d:%02d".format(hours, minutes, seconds)
-                else -> "%d:%02d".format(minutes, seconds)
-            }
-        } else {
-            ""
-        }
-
-    val resolution: String
-        get() = if (videoWidth > 0 && videoHeight > 0) {
-            "${videoWidth}x$videoHeight"
-        } else {
-            ""
-        }
-
-    val displayBitrate: String
-        get() = if (bitrate > 0) {
-            when {
-                bitrate < 1000 -> "$bitrate bps"
-                bitrate < 1000_000 -> "%.1f Kbps".format(bitrate / 1000.0)
-                else -> "%.1f Mbps".format(bitrate / 1000_000.0)
-            }
-        } else {
-            ""
-        }
 }

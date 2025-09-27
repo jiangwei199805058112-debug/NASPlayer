@@ -28,6 +28,7 @@ class SmbMediaDataSource(
             val result = runBlocking {
                 smbDataSource.getInputStream(path)
             }
+            inputStream = result.getOrThrow()
             inputStream = result.getOrNull()
                 ?: throw IOException("Failed to open SMB stream: ${result.exceptionOrNull()?.message}")
 
@@ -37,9 +38,14 @@ class SmbMediaDataSource(
                         smbDataSource.seekStream(stream, dataSpec.position)
                     } ?: Result.failure(IOException("Stream is null"))
                 }
-                if (seekResult.getOrNull() != true) {
-                    throw IOException("Seek failed: ${seekResult.exceptionOrNull()?.message}")
-                }
+                seekResult.fold(
+                    onSuccess = { success ->
+                        if (!success) throw IOException("Seek failed")
+                    },
+                    onFailure = { error ->
+                        throw IOException("Seek failed: ${error.message}")
+                    }
+                )
             }
             bytesRead = 0
             return C.LENGTH_UNSET.toLong()

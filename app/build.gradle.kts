@@ -1,8 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp")
+    // id("com.google.dagger.hilt.android"),
+    // id("com.google.devtools.ksp")
     alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
     id("jacoco")
@@ -111,21 +111,25 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    // ksp(libs.hilt.compiler)
 
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
+    // ksp(libs.room.compiler)
 
     // Media3 ExoPlayer
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.common)
 
-    // SMB
+    // SMBJ & RPC
     implementation(libs.smbj)
     implementation("eu.agno3.jcifs:jcifs-ng:2.1.10")
+
+    // 安全存储
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Coroutines
     implementation(libs.coroutines.core)
@@ -140,6 +144,8 @@ dependencies {
 
     // Test dependencies
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -3,8 +3,11 @@ package com.example.nasonly.repository
 import android.util.Log
 import com.example.nasonly.data.smb.SmbConnectionManager
 import com.example.nasonly.data.smb.SmbConnectionResult
+import com.example.nasonly.data.smb.SmbCredentials
 import com.example.nasonly.data.smb.SmbDataSource
 import com.example.nasonly.data.smb.SmbFileInfo
+import com.example.nasonly.data.smb.SmbFileWithMetadata
+import com.example.nasonly.data.smb.SmbShareInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.io.InputStream
@@ -58,6 +61,17 @@ class SmbRepository @Inject constructor(
         }
     }
 
+    suspend fun getShares(host: String, creds: SmbCredentials): Result<List<SmbShareInfo>> {
+        return try {
+            Log.d(TAG, "Getting shares for host: $host")
+            val shares = smbConnectionManager.listShares(host, creds)
+            Result.success(shares)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting shares", e)
+            Result.failure(Exception("获取共享列表失败: ${e.message}"))
+        }
+    }
+
     suspend fun getInputStream(path: String): Result<InputStream> {
         return try {
             Log.d(TAG, "Getting input stream for path: $path")
@@ -81,7 +95,11 @@ class SmbRepository @Inject constructor(
     suspend fun listFiles(directoryPath: String = ""): Result<List<SmbFileInfo>> {
         return try {
             Log.d(TAG, "Listing files in directory: $directoryPath")
-            smbDataSource.listFiles(directoryPath)
+            // 解析shareName和relativePath
+            val parts = directoryPath.split("/", limit = 2)
+            val shareName = parts.getOrNull(0) ?: ""
+            val relativePath = parts.getOrNull(1) ?: ""
+            smbDataSource.listFiles(shareName, relativePath)
         } catch (e: Exception) {
             Log.e(TAG, "Error listing files", e)
             Result.failure(Exception("获取文件列表失败: ${e.message}"))
@@ -89,13 +107,14 @@ class SmbRepository @Inject constructor(
     }
 
     suspend fun listFilesWithMetadata(
-        directoryPath: String = "",
+        shareName: String,
+        relativePath: String = "",
         includeMetadata: Boolean = true,
         generateThumbnails: Boolean = true,
-    ): Result<List<SmbFileInfo>> {
+    ): Result<List<SmbFileWithMetadata>> {
         return try {
-            Log.d(TAG, "Listing files with metadata in directory: $directoryPath")
-            smbDataSource.listFilesWithMetadata(directoryPath, includeMetadata, generateThumbnails)
+            Log.d(TAG, "Listing files with metadata in share: $shareName, path: $relativePath")
+            smbDataSource.listFilesWithMetadata(shareName, relativePath, includeMetadata, generateThumbnails)
         } catch (e: Exception) {
             Log.e(TAG, "Error listing files with metadata", e)
             Result.failure(Exception("获取增强文件列表失败: ${e.message}"))

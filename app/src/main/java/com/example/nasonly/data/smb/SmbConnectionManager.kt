@@ -1,12 +1,5 @@
 package com.example.nasonly.data.smb
 
-import android.util.Log
-import com.hierynomus.msdtyp.AccessMask
-import com.hierynomus.msfscc.FileAttributes
-import com.hierynomus.mssmb2.SMB2CreateDisposition
-import com.hierynomus.mssmb2.SMB2CreateOptions
-import com.hierynomus.mssmb2.SMB2ShareAccess
-import com.hierynomus.mssmb2.SMBApiException
 import com.hierynomus.smbj.SMBClient
 import com.hierynomus.smbj.auth.AuthenticationContext
 import com.hierynomus.smbj.connection.Connection
@@ -14,6 +7,14 @@ import com.hierynomus.smbj.session.Session
 import com.hierynomus.smbj.share.DiskShare
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+import android.util.Log
+import com.hierynomus.msdtyp.AccessMask
+import com.hierynomus.msfscc.FileAttributes
+import com.hierynomus.mssmb2.SMB2CreateDisposition
+import com.hierynomus.mssmb2.SMB2CreateOptions
+import com.hierynomus.mssmb2.SMB2ShareAccess
+import com.hierynomus.mssmb2.SMBApiException
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -24,10 +25,57 @@ import com.hierynomus.smbj.share.File as SmbFile
 
 @Singleton
 class SmbConnectionManager @Inject constructor() : SmbManager {
-    companion object {
-        private const val TAG = "SmbConnectionManager"
-        private const val DEFAULT_TIMEOUT = 60000
-        private const val SMB_PORT = 445
+    /**
+     * 枚举顶层共享列表（Disk类型）
+     */
+    suspend fun listShares(host: String, creds: SmbCredentials): List<SmbShareInfo> = withContext(Dispatchers.IO) {
+        probeCommonShares(host, creds)
+    }
+    fun getCurrentCredentials(): SmbCredentials {
+        return SmbCredentials(
+            domain = domain,
+            username = username,
+            password = password
+        )
+    }
+
+    fun getCurrentHost(): String = host
+
+    /**
+     * 探测常见共享名作为 RPC 失败的回退策略
+     */
+    private suspend fun probeCommonShares(host: String, creds: SmbCredentials): List<SmbShareInfo> = withContext(Dispatchers.IO) {
+        val client = SMBClient()
+        var connection: Connection? = null
+        var session: Session? = null
+        val foundShares = mutableListOf<SmbShareInfo>()
+        try {
+            connection = client.connect(host)
+            val auth = AuthenticationContext(creds.username ?: "", creds.password?.toCharArray() ?: charArrayOf(), creds.domain)
+            session = connection.authenticate(auth)
+            for (shareName in COMMON_SHARE_NAMES) {
+                try {
+                    val share = session.connectShare(shareName) as? DiskShare
+                    if (share != null) {
+                        // Try to list root to verify access
+                                                val dir = share.openDirectory("\\", emptySet(), null, com.hierynomus.mssmb2.SMB2ShareAccess.ALL, null, emptySet())
+                        dir.list()
+                        dir.close()
+                        foundShares.add(SmbShareInfo(shareName, "DISK", ""))
+                        share.close()
+                    }
+                } catch (e: Exception) {
+                    // Share not accessible or doesn't exist, skip
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to probe common shares: ${e.message}", e)
+        } finally {
+            try { session?.close() } catch (_: Exception) {}
+            try { connection?.close() } catch (_: Exception) {}
+            try { client.close() } catch (_: Exception) {}
+        }
+        foundShares
     }
 
     private val isConnected = AtomicBoolean(false)
@@ -209,6 +257,31 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
         return connectAsync()
     }
 
+    override suspend fun connect(host: String, creds: SmbCredentials): Session = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Connecting to SMB server: $host")
+
+            val client = SMBClient()
+            val connection = client.connect(host)
+
+            val authContext = AuthenticationContext(
+                creds.username ?: "",
+                (creds.password ?: "").toCharArray(),
+                creds.domain
+            )
+            val session = connection.authenticate(authContext)
+
+            // Store the connection for later use
+            this@SmbConnectionManager.connection = connection
+            this@SmbConnectionManager.session = session
+
+            session
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to connect to SMB server $host", e)
+            throw e
+        }
+    }
+
     override fun isConnected(): Boolean = isConnected.get() && session != null
 
     override fun openInputStream(path: String): InputStream? {
@@ -325,7 +398,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
     }
 
     // 新增方法：列出目录内容
-    suspend fun listDirectory(path: String = ""): List<SmbFileInfo> = withContext(Dispatchers.IO) {
+    suspend fun listDirectory(shareName: String, relativePath: String = ""): List<SmbFileInfo> = withContext(Dispatchers.IO) {
         try {
             if (!isConnected()) {
                 Log.w(TAG, "Attempting to list directory without connection")
@@ -333,41 +406,48 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
                     return@withContext emptyList()
                 }
             }
-
             val currentShare = diskShare
             if (currentShare == null) {
-                Log.e(TAG, "No disk share available for listing directory: $path")
+                Log.e(TAG, "No disk share available for listing directory: $shareName/$relativePath")
                 return@withContext emptyList()
             }
-
-            // 解析 SMB URL，提取相对于共享的路径
-            val relativePath = parseSmbPath(path)
-            Log.d(TAG, "Listing directory: $path (relative: $relativePath) using smbj")
-
+            Log.d(TAG, "Listing directory: $shareName/$relativePath using smbj")
             val files = mutableListOf<SmbFileInfo>()
-            val directoryPath = relativePath
-
-            currentShare.list(directoryPath).forEach { fileInfo ->
+            val dir = if (relativePath.isEmpty()) "" else relativePath
+            val dirHandle = currentShare.openDirectory(dir, emptySet(), null, com.hierynomus.mssmb2.SMB2ShareAccess.ALL, null, emptySet())
+            dirHandle.list().forEach { fileInfo ->
                 val fileName = fileInfo.fileName
                 val fileAttributes = fileInfo.fileAttributes
-                val isDirectory = (fileAttributes and 0x10L) != 0L // FILE_ATTRIBUTE_DIRECTORY
+                val isDirectory = (fileAttributes and 0x10L) != 0L
                 val fileSize = if (isDirectory) 0L else fileInfo.endOfFile
-                val fullPath = if (relativePath.isEmpty()) fileName else "$relativePath/$fileName"
-
-                // 跳过 . 和 .. 目录
+                val fullPath = if (dir.isEmpty()) fileName else "$dir/$fileName"
                 if (fileName != "." && fileName != "..") {
                     files.add(SmbFileInfo(fileName, fullPath, fileSize, isDirectory))
                 }
             }
-
-            Log.d(TAG, "Found ${files.size} files/directories in $path")
+            Log.d(TAG, "Found ${files.size} files/directories in $shareName/$relativePath")
             files
         } catch (e: SMBApiException) {
-            Log.e(TAG, "SMB API error listing directory $path: ${e.message}", e)
+            Log.e(TAG, "SMB API error listing directory $shareName/$relativePath: ${e.message}", e)
             emptyList()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to list directory $path: ${e.message}", e)
+            Log.e(TAG, "Failed to list directory $shareName/$relativePath: ${e.message}", e)
             emptyList()
+        }
+    }
+    /**
+     * 统一错误码映射
+     */
+    fun mapError(e: Exception): SmbErrorType {
+        return when (e) {
+            is SMBApiException -> when (e.message) {
+                "STATUS_LOGON_FAILURE" -> SmbErrorType.AUTH_FAILED
+                "STATUS_ACCESS_DENIED" -> SmbErrorType.ACCESS_DENIED
+                "STATUS_OBJECT_NAME_NOT_FOUND" -> SmbErrorType.NOT_FOUND
+                else -> SmbErrorType.NETWORK
+            }
+            is IOException -> SmbErrorType.NETWORK
+            else -> SmbErrorType.NETWORK
         }
     }
 
@@ -417,9 +497,19 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
     override fun close() {
         disconnect()
     }
+
+    companion object {
+        private const val TAG = "SmbConnectionManager"
+        private const val DEFAULT_TIMEOUT = 60000
+        private const val SMB_PORT = 445
+        private val COMMON_SHARE_NAMES = listOf("public", "share", "media", "backup", "data", "documents", "music", "video", "photos", "shared", "nas", "storage")
+    }
 }
 
 sealed class SmbConnectionResult {
+enum class SmbErrorType {
+    AUTH_FAILED, ACCESS_DENIED, NOT_FOUND, NETWORK
+}
     data class Success(val message: String) : SmbConnectionResult()
     data class Error(val message: String) : SmbConnectionResult()
 }

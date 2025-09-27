@@ -39,12 +39,14 @@ fun MediaLibraryScreen(
     val tabs = listOf("媒体文件", "播放历史")
 
     LaunchedEffect(Unit) {
-        if (host.isNotEmpty() && share.isNotEmpty()) {
-            // 如果有host和share参数，从NAS加载
-            viewModel.loadMediaFiles("smb://$host/$share")
-        } else {
-            // 默认加载本地或上次路径
-            viewModel.loadMediaFiles()
+        // 默认加载顶层共享列表（host和creds需从配置或参数获取）
+        val creds = /* TODO: 获取SMB凭据 */ com.example.nasonly.data.smb.SmbCredentials(username = "guest", password = "")
+        if (host.isNotEmpty()) {
+            if (share.isNotEmpty()) {
+                viewModel.loadMedia(host, creds, shareName = share)
+            } else {
+                viewModel.loadMedia(host, creds)
+            }
         }
         viewModel.loadPlaybackHistory()
     }
@@ -173,7 +175,7 @@ private fun MediaFilesTab(
             uiState.files
         } else {
             uiState.files.filter { file ->
-                file.name.contains(searchQuery, ignoreCase = true)
+                file.file.name.contains(searchQuery, ignoreCase = true)
             }
         }
     }
@@ -233,10 +235,10 @@ private fun MediaFilesTab(
                     sortOrder = sortOrder,
                     onFileClick = { smbFile ->
                         val media = MediaItem(
-                            name = smbFile.name,
-                            path = smbFile.path,
-                            size = smbFile.size,
-                            isDirectory = smbFile.isDirectory,
+                            name = smbFile.file.name,
+                            path = smbFile.file.fullPath,
+                            size = smbFile.file.size,
+                            isDirectory = smbFile.file.isDirectory,
                         )
                         onFileClick(media)
                     },

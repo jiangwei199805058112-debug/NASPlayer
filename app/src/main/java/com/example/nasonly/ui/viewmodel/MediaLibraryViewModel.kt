@@ -4,9 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nasonly.data.db.PlaybackHistoryDao
 import com.example.nasonly.data.remote.smb.RemoteVideo
-import com.example.nasonly.data.remote.smb.SmbCredentials
+import com.example.nasonly.data.smb.SmbCredentials
 import com.example.nasonly.data.remote.smb.SmbScanner
-import com.example.nasonly.data.smb.SmbFileInfo
+import com.example.nasonly.data.smb.SmbFile
+import com.example.nasonly.data.smb.SmbFileWithMetadata
 import com.example.nasonly.repository.SmbRepository
 import com.example.nasonly.ui.screens.MediaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,8 @@ class MediaLibraryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MediaLibraryUiState())
     val uiState: StateFlow<MediaLibraryUiState> = _uiState
 
-    private var currentPath: String = ""
+        private var currentShare: String = ""
+        private var currentPath: String = ""
 
     fun loadMediaFiles(path: String = "") {
         viewModelScope.launch {
@@ -34,6 +36,7 @@ class MediaLibraryViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
                 val result = smbRepository.listFilesWithMetadata(
+                    currentShare,
                     path,
                     includeMetadata = true,
                     generateThumbnails = true,
@@ -41,12 +44,12 @@ class MediaLibraryViewModel @Inject constructor(
                 result.fold(
                     onSuccess = { smbFiles ->
                         @Suppress("UNUSED_VARIABLE")
-                        val mediaItems = smbFiles.map { smbFile ->
+                        val mediaItems = smbFiles.map { smbFileWithMetadata ->
                             MediaItem(
-                                name = smbFile.name,
-                                path = smbFile.path,
-                                size = smbFile.size,
-                                isDirectory = smbFile.isDirectory,
+                                name = smbFileWithMetadata.file.name,
+                                path = smbFileWithMetadata.file.fullPath,
+                                size = smbFileWithMetadata.file.size,
+                                isDirectory = smbFileWithMetadata.file.isDirectory,
                             )
                         }
 
@@ -72,6 +75,82 @@ class MediaLibraryViewModel @Inject constructor(
             }
         }
     }
+    
+        /**
+         * 加载顶层共享列表或指定共享下的文件
+         * @param host NAS主机名
+         * @param creds SMB凭据
+         * @param shareName 共享名（为空则枚举共享列表）
+         * @param relativePath 共享内路径
+         */
+        fun loadMedia(host: String, creds: SmbCredentials, shareName: String = "", relativePath: String = "") {
+            viewModelScope.launch {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+                try {
+                    if (shareName.isEmpty()) {
+                        // 枚举顶层共享
+                        val result = smbRepository.getShares(host, creds)
+                        result.fold(
+                            onSuccess = { shares ->
+                                val items = shares.map { share ->
+                                    SmbFileWithMetadata(
+                                        file = SmbFile(
+                                            name = share.name,
+                                            isDirectory = true,
+                                            size = 0L,
+                                            lastModified = Date(),
+                                            fullPath = share.name
+                                        ),
+                                        metadata = null
+                                    )
+                                }
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    files = items,
+                                    currentPath = "",
+                                )
+                            },
+                            onFailure = { error ->
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    error = error.message ?: "加载共享列表失败",
+                                )
+                            },
+                        )
+                    } else {
+                        // 枚举共享内文件
+                        val result = smbRepository.listFilesWithMetadata(
+                            shareName,
+                            relativePath,
+                            includeMetadata = true,
+                            generateThumbnails = true,
+                        )
+                        result.fold(
+                            onSuccess = { smbFiles ->
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    files = smbFiles,
+                                    currentPath = relativePath,
+                                )
+                                currentShare = shareName
+                                currentPath = relativePath
+                            },
+                            onFailure = { error ->
+                                _uiState.value = _uiState.value.copy(
+                                    isLoading = false,
+                                    error = error.message ?: "加载媒体文件失败",
+                                )
+                            },
+                        )
+                    }
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "加载媒体文件异常: ${e.message}",
+                    )
+                }
+            }
+        }
 
     fun refreshMediaFiles() {
         loadMediaFiles(currentPath)
@@ -89,7 +168,7 @@ class MediaLibraryViewModel @Inject constructor(
         viewModelScope.launch {
             val list = smbScanner.scanVideos(
                 rootPath = "\\\\Mycloudpr2100\\备份文件\\20250606美术馆",
-                creds = SmbCredentials(username = "guest", password = "")
+                creds = com.example.nasonly.data.remote.smb.SmbCredentials(username = "guest", password = "")
             ) { found ->
                 // stream results to UI if needed
                 // Log.d("SMB", "Found: ${found.name}")
@@ -97,8 +176,17 @@ class MediaLibraryViewModel @Inject constructor(
             // Update UI state with found videos
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                files = list.map { RemoteVideo ->
-                    SmbFileInfo(RemoteVideo.name, RemoteVideo.smbUrl, RemoteVideo.size, false)
+                files = list.map { remoteVideo ->
+                    SmbFileWithMetadata(
+                        file = SmbFile(
+                            name = remoteVideo.name,
+                            isDirectory = false,
+                            size = remoteVideo.size,
+                            lastModified = Date(),
+                            fullPath = remoteVideo.smbUrl
+                        ),
+                        metadata = null
+                    )
                 }
             )
         }
@@ -182,7 +270,7 @@ class MediaLibraryViewModel @Inject constructor(
 
 data class MediaLibraryUiState(
     val currentPath: String = "",
-    val files: List<SmbFileInfo> = emptyList(),
+    val files: List<SmbFileWithMetadata> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val playbackHistory: List<HistoryItem> = emptyList(),
