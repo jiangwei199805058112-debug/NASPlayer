@@ -41,35 +41,28 @@ public class NASUtils {
             throw new IllegalArgumentException("密码不能为空");
         }
 
-        try (SMBClient client = new SMBClient();
-             Connection connection = client.connect(host)) {
-            AuthenticationContext authContext =
-                new AuthenticationContext(username, password.toCharArray(), null);
-            try (Session session = connection.authenticate(authContext)) {
-                Set<String> shareNames = connection.listShares();
-                List<String> userShares = new ArrayList<>();
-                for (String shareName : shareNames) {
-                    if (!shareName.endsWith("$")) {
-                        userShares.add(shareName);
+            try (SMBClient client = new SMBClient();
+                 Connection connection = client.connect(host)) {
+                AuthenticationContext authContext =
+                    new AuthenticationContext(username, password.toCharArray(), null);
+                try (Session session = connection.authenticate(authContext)) {
+                    List<String> userShares = new ArrayList<>();
+                    for (String shareName : connection.listShares()) {
+                        if (!shareName.endsWith("$")) {
+                            userShares.add(shareName);
+                        }
                     }
+                    return userShares;
                 }
-                return userShares;
+            } catch (Exception e) {
+                if (e.getMessage() != null && (e.getMessage().contains("STATUS_LOGON_FAILURE") ||
+                    e.getMessage().contains("STATUS_ACCESS_DENIED") ||
+                    e.getMessage().contains("Authentication failed"))) {
+                    throw new NASAuthenticationException("认证失败：用户名或密码错误", e);
+                } else {
+                    throw new NASConnectionException("SMB协议错误或连接失败：" + e.getMessage(), e);
+                }
             }
-        } catch (com.hierynomus.smbj.common.SMBApiException e) {
-            if (e.getMessage().contains("STATUS_LOGON_FAILURE") ||
-                e.getMessage().contains("STATUS_ACCESS_DENIED") ||
-                e.getMessage().contains("Authentication failed")) {
-                throw new NASAuthenticationException("认证失败：用户名或密码错误", e);
-            } else {
-                throw new NASConnectionException("SMB协议错误：" + e.getMessage(), e);
-            }
-        } catch (ConnectException e) {
-            throw new NASConnectionException("无法连接到NAS服务器 " + host + "：" + e.getMessage(), e);
-        } catch (IOException e) {
-            throw new NASConnectionException("连接过程中发生IO错误：" + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new NASConnectionException("获取共享列表时发生未知错误：" + e.getMessage(), e);
-        }
     }
 
     /**

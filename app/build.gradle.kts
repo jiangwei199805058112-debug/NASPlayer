@@ -1,3 +1,7 @@
+dependencies {
+    // ...其他依赖...
+    implementation("com.hierynomus:smbj:0.11.5")
+    // ...其他依赖...
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
