@@ -92,6 +92,7 @@ dependencies {
 
     // Coil for image loading
     implementation(libs.coil.compose)
+    implementation(libs.timber)
 
     // Test dependencies
     testImplementation(libs.junit)

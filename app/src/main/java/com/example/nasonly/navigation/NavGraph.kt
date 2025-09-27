@@ -23,12 +23,7 @@ fun NavGraph(
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.NAS_DISCOVERY) {
-            NasDiscoveryScreen(
-                onDeviceConnected = { _ ->
-                    // 连接成功后导航到媒体库
-                    navController.navigate(Routes.MEDIA_LIBRARY)
-                },
-            )
+            NasDiscoveryScreen(navController)
         }
         composable(Routes.NAS_CONFIG) {
             NasConfigScreen(navController)
@@ -40,6 +35,21 @@ fun NavGraph(
         }
         composable(Routes.MEDIA_LIBRARY) {
             MediaLibraryScreen(navController)
+        }
+        composable(
+            route = "media/{host}?share={share}",
+            arguments = listOf(
+                navArgument("host") { type = NavType.StringType },
+                navArgument("share") { type = NavType.StringType; defaultValue = "" }
+            )
+        ) { backStackEntry ->
+            val host = backStackEntry.arguments?.getString("host").orEmpty()
+            val share = backStackEntry.arguments?.getString("share").orEmpty()
+            MediaLibraryScreen(
+                navController = navController,
+                host = host,
+                share = share
+            )
         }
         composable(Routes.PLAYLIST_MANAGEMENT) {
             PlaylistManagementScreen(navController)

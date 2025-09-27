@@ -28,6 +28,8 @@ import com.example.nasonly.ui.viewmodel.MediaLibraryViewModel
 @Composable
 fun MediaLibraryScreen(
     navController: NavController,
+    host: String = "",
+    share: String = "",
     viewModel: MediaLibraryViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -35,7 +37,13 @@ fun MediaLibraryScreen(
     val tabs = listOf("媒体文件", "播放历史")
 
     LaunchedEffect(Unit) {
-        viewModel.loadMediaFiles()
+        if (host.isNotEmpty() && share.isNotEmpty()) {
+            // 如果有host和share参数，从NAS加载
+            viewModel.loadMediaFiles("smb://$host/$share")
+        } else {
+            // 默认加载本地或上次路径
+            viewModel.loadMediaFiles()
+        }
         viewModel.loadPlaybackHistory()
     }
 

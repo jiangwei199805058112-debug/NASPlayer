@@ -204,6 +204,11 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
         }
     }
 
+    override suspend fun connect(host: String, share: String, username: String, password: String, domain: String): Boolean {
+        configure(host, share, username, password, domain)
+        return connectAsync()
+    }
+
     override fun isConnected(): Boolean = isConnected.get() && session != null
 
     override fun openInputStream(path: String): InputStream? {

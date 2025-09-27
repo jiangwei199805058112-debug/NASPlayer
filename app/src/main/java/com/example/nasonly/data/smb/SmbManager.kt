@@ -6,6 +6,7 @@ import java.io.OutputStream
 
 interface SmbManager : Closeable {
     fun connect(): Boolean
+    suspend fun connect(host: String, share: String, username: String, password: String, domain: String = ""): Boolean
     fun disconnect()
     fun isConnected(): Boolean
     fun openInputStream(path: String): InputStream?
