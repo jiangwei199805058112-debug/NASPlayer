@@ -11,7 +11,6 @@ import androidx.compose.material3.Surface
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.example.nasonly.navigation.NavGraph
-import com.example.nasonly.navigation.Routes
 import com.example.nasonly.ui.theme.NASPlayerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -54,7 +53,6 @@ class MainActivity : ComponentActivity() {
                 Surface {
                     val navController = rememberNavController()
                     NavGraph(
-                        startDestination = Routes.NAS_DISCOVERY,
                         navController = navController,
                     )
                 }

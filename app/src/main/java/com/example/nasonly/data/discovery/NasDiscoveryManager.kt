@@ -1,393 +1,254 @@
 package com.example.nasonly.data.discovery
 
 import android.content.Context
-import android.net.nsd.NsdManager
-import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 import android.util.Log
+import com.example.nasonly.model.NasDevice
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.runningFold
 import java.net.*
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * NAS 设备自动发现管理器
- * 支持多种发现协议：mDNS/DNS-SD, SSDP, WS-Discovery, 子网扫描
+ * 支持 mDNS、NetBIOS、端口探测三路并行
  */
 @Singleton
 class NasDiscoveryManager @Inject constructor(
     private val context: Context,
 ) {
     companion object {
-        private const val TAG = "NasDiscoveryManager"
-        private const val SMB_SERVICE_TYPE = "_smb._tcp"
-        private const val SSDP_PORT = 1900
-        private const val WS_DISCOVERY_PORT = 3702
+        private const val TAG = "NASDiscovery"
+        private const val MDNS_PORT = 5353
+        private const val NETBIOS_PORT = 137
         private const val SMB_PORT = 445
-        private const val DISCOVERY_TIMEOUT = 10000L // 10秒
-        private const val PING_TIMEOUT = 1000 // 1秒
+        private const val DISCOVERY_TIMEOUT = 5000L // 5秒每路
+        private const val OVERALL_TIMEOUT = 6000L // 整体6秒
     }
 
-    private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
-
-    // 存储发现到的设备
-    private val discoveredDevices = mutableSetOf<DeviceInfo>()
-    private var discoveryJob: Job? = null
+    private var multicastLock: WifiManager.MulticastLock? = null
 
     /**
-     * 开始NAS发现，返回Flow持续发送发现到的设备
+     * 获取并持有 MulticastLock
      */
-    fun startDiscovery(): Flow<List<DeviceInfo>> = flow {
-        discoveredDevices.clear()
-
-        try {
-            Log.d(TAG, "Starting NAS discovery with multiple protocols")
-
-            // 并行执行多种发现方法
-            coroutineScope {
-                val jobs = listOf(
-                    async { discoverViaMdns() },
-                    async { discoverViaSsdp() },
-                    async { discoverViaWsDiscovery() },
-                    async { discoverViaSubnetScan() },
-                )
-
-                // 等待一段时间让发现结果累积
-                delay(DISCOVERY_TIMEOUT)
-
-                // 取消所有发现任务
-                jobs.forEach { it.cancel() }
+    fun acquireMulticastLock() {
+        if (multicastLock == null) {
+            multicastLock = wifiManager.createMulticastLock("nas_mdns_lock").apply {
+                setReferenceCounted(true)
             }
-
-            Log.d(TAG, "Discovery completed, found ${discoveredDevices.size} devices")
-            emit(discoveredDevices.toList())
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during discovery: ${e.message}", e)
-            emit(discoveredDevices.toList())
+        }
+        if (!multicastLock!!.isHeld) {
+            multicastLock!!.acquire()
+            Log.d(TAG, "MulticastLock acquired")
         }
     }
 
     /**
-     * mDNS/DNS-SD 发现
+     * 释放 MulticastLock
      */
-    private suspend fun discoverViaMdns() = withContext(Dispatchers.IO) {
-        try {
-            Log.d(TAG, "Starting mDNS discovery for SMB services")
+    fun releaseMulticastLock() {
+        multicastLock?.let {
+            if (it.isHeld) {
+                it.release()
+                Log.d(TAG, "MulticastLock released")
+            }
+        }
+    }
 
-            val channel = Channel<DeviceInfo>(Channel.UNLIMITED)
-
-            val discoveryListener = object : NsdManager.DiscoveryListener {
-                override fun onStartDiscoveryFailed(serviceType: String?, errorCode: Int) {
-                    Log.e(TAG, "mDNS discovery start failed: $errorCode")
-                }
-
-                override fun onStopDiscoveryFailed(serviceType: String?, errorCode: Int) {
-                    Log.e(TAG, "mDNS discovery stop failed: $errorCode")
-                }
-
-                override fun onDiscoveryStarted(serviceType: String?) {
-                    Log.d(TAG, "mDNS discovery started for: $serviceType")
-                }
-
-                override fun onDiscoveryStopped(serviceType: String?) {
-                    Log.d(TAG, "mDNS discovery stopped for: $serviceType")
-                }
-
-                override fun onServiceFound(serviceInfo: NsdServiceInfo?) {
-                    serviceInfo?.let { info ->
-                        Log.d(TAG, "mDNS service found: ${info.serviceName}")
-                        resolveService(info, channel)
+    /**
+     * 逐条发射发现的设备
+     */
+    fun discover(): Flow<NasDevice> = channelFlow {
+        withContext(Dispatchers.IO) {
+            val dedup = ConcurrentHashMap.newKeySet<String>()
+            suspend fun emitAll(list: List<NasDevice>) {
+                list.forEach { dev ->
+                    val key = dev.ip.hostAddress!!
+                    if (dedup.add(key)) {
+                        send(dev)
+                        Log.d(TAG, "Discovered device: ${dev.name ?: "Unknown"} at ${dev.ip.hostAddress}")
                     }
                 }
-
-                override fun onServiceLost(serviceInfo: NsdServiceInfo?) {
-                    Log.d(TAG, "mDNS service lost: ${serviceInfo?.serviceName}")
+            }
+            withTimeout(OVERALL_TIMEOUT) {
+                coroutineScope {
+                    launch { emitAll(mdnsProbe()) }
+                    launch { emitAll(netbiosProbe()) }
+                    launch { emitAll(portProbe()) }
                 }
             }
+        }
+    }
 
-            nsdManager.discoverServices(SMB_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+    /**
+     * 聚合发射设备列表
+     */
+    fun discoverAll(): Flow<List<NasDevice>> = discover()
+        .runningFold(emptyList<NasDevice>()) { acc, item ->
+            if (acc.any { it.ip == item.ip }) acc else acc + item
+        }
 
-            // 收集发现的设备
+    /**
+     * mDNS 探测 _smb._tcp
+     */
+    private suspend fun mdnsProbe(): List<NasDevice> = withContext(Dispatchers.IO) {
+        val devices = mutableListOf<NasDevice>()
+        val socket = MulticastSocket(MDNS_PORT)
+        try {
+            socket.joinGroup(InetAddress.getByName("224.0.0.251"))
+
+            val query = byteArrayOf(
+                // DNS 查询头部
+                0x00.toByte(), 0x00.toByte(), // ID
+                0x01.toByte(), 0x00.toByte(), // Flags: recursion desired
+                0x00.toByte(), 0x01.toByte(), // QDCOUNT: 1 question
+                0x00.toByte(), 0x00.toByte(), // ANCOUNT
+                0x00.toByte(), 0x00.toByte(), // NSCOUNT
+                0x00.toByte(), 0x00.toByte(), // ARCOUNT
+                // Question: _smb._tcp.local
+                0x04.toByte(), 0x5f.toByte(), 0x73.toByte(), 0x6d.toByte(), 0x62.toByte(), // _smb
+                0x04.toByte(), 0x5f.toByte(), 0x74.toByte(), 0x63.toByte(), 0x70.toByte(), // _tcp
+                0x05.toByte(), 0x6c.toByte(), 0x6f.toByte(), 0x63.toByte(), 0x61.toByte(), 0x6c.toByte(), // local
+                0x00.toByte(), // null terminator
+                0x00.toByte(), 0x0c.toByte(), // QTYPE: PTR
+                0x00.toByte(), 0x01, // QCLASS: IN
+            )
+
+            socket.send(DatagramPacket(query, query.size, InetAddress.getByName("224.0.0.251"), MDNS_PORT))
+
+            val buffer = ByteArray(4096)
+            val packet = DatagramPacket(buffer, buffer.size)
+
+            withTimeout(DISCOVERY_TIMEOUT) {
+                while (true) {
+                    socket.receive(packet)
+                    // 简单解析响应，提取IP（实际实现需要完整DNS解析）
+                    val ip = packet.address
+                    if (ip.isSiteLocalAddress) {
+                        devices.add(NasDevice(ip, "SMB Device", true))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "mDNS probe failed: ${e.message}")
+        } finally {
+            socket.close()
+        }
+        devices
+    }
+
+    /**
+     * NetBIOS 探测 UDP 137
+     */
+    private suspend fun netbiosProbe(): List<NasDevice> = withContext(Dispatchers.IO) {
+        val devices = mutableListOf<NasDevice>()
+        val socket = DatagramSocket()
+        try {
+            socket.broadcast = true
+
+            val query = byteArrayOf(
+                // NetBIOS Name Query
+                0x82.toByte(), 0x28.toByte(), // Transaction ID
+                0x00.toByte(), 0x00.toByte(), // Flags
+                0x00.toByte(), 0x01.toByte(), // Questions
+                0x00.toByte(), 0x00.toByte(), // Answer RRs
+                0x00.toByte(), 0x00.toByte(), // Authority RRs
+                0x00.toByte(), 0x00.toByte(), // Additional RRs
+                // Question: *<00>
+                0x20.toByte(), 0x43.toByte(), 0x4b.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(),
+                0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(),
+                0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(),
+                0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(), 0x41.toByte(),
+                0x00.toByte(), // Name
+                0x00.toByte(), 0x21.toByte(), // Type: NBSTAT
+                0x00.toByte(), 0x01.toByte(), // Class: IN
+            )
+
+            val broadcastAddr = getBroadcastAddress()
+            socket.send(DatagramPacket(query, query.size, broadcastAddr, NETBIOS_PORT))
+
+            val buffer = ByteArray(4096)
+            val packet = DatagramPacket(buffer, buffer.size)
+
+            withTimeout(DISCOVERY_TIMEOUT) {
+                while (true) {
+                    socket.receive(packet)
+                    val ip = packet.address
+                    if (ip.isSiteLocalAddress) {
+                        devices.add(NasDevice(ip, "NetBIOS Device", true))
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "NetBIOS probe failed: ${e.message}")
+        } finally {
+            socket.close()
+        }
+        devices
+    }
+
+    /**
+     * 端口探测 445
+     */
+    private suspend fun portProbe(): List<NasDevice> = withContext(Dispatchers.IO) {
+        val devices = mutableListOf<NasDevice>()
+        val localAddr = getLocalAddress()
+        if (localAddr == null) return@withContext devices
+
+        val subnet = getSubnet(localAddr)
+        for (i in 1..254) {
+            val ip = InetAddress.getByName("$subnet.$i")
+            if (ip == localAddr) continue
+
             try {
-                withTimeout(DISCOVERY_TIMEOUT) {
-                    while (true) {
-                        val device = channel.receive()
-                        discoveredDevices.add(device)
-                        Log.d(TAG, "Added mDNS device: ${device.name} (${device.ip})")
-                    }
-                }
-            } catch (e: TimeoutCancellationException) {
-                Log.d(TAG, "mDNS discovery timeout")
-            }
-
-            nsdManager.stopServiceDiscovery(discoveryListener)
-        } catch (e: Exception) {
-            Log.e(TAG, "mDNS discovery error: ${e.message}", e)
-        }
-    }
-
-    /**
-     * 解析mDNS服务
-     */
-    private fun resolveService(serviceInfo: NsdServiceInfo, channel: Channel<DeviceInfo>) {
-        val resolveListener = object : NsdManager.ResolveListener {
-            override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-                Log.e(TAG, "Service resolve failed: $errorCode")
-            }
-
-            override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
-                serviceInfo?.let { info ->
-                    val device = DeviceInfo(
-                        name = info.serviceName,
-                        ip = info.host?.hostAddress ?: "",
-                        protocol = "mDNS",
-                    )
-                    channel.trySend(device)
-                }
+                val socket = Socket()
+                socket.connect(InetSocketAddress(ip, SMB_PORT), 500) // 500ms timeout
+                socket.close()
+                devices.add(NasDevice(ip, "SMB Port Open", true))
+            } catch (e: Exception) {
+                // Not reachable
             }
         }
-
-        nsdManager.resolveService(serviceInfo, resolveListener)
+        devices
     }
 
-    /**
-     * SSDP (UPnP) 发现
-     */
-    private suspend fun discoverViaSsdp() = withContext(Dispatchers.IO) {
-        try {
-            Log.d(TAG, "Starting SSDP discovery")
+    @Suppress("DEPRECATION")
+    private fun getBroadcastAddress(): InetAddress {
+        val wifiInfo = wifiManager.connectionInfo
+        val ip = wifiInfo.ipAddress
+        val subnet = (ip and 0xFFFFFF00.toInt()) or 0xFF
+        return InetAddress.getByAddress(
+            byteArrayOf(
+                (subnet shr 24).toByte(),
+                (subnet shr 16).toByte(),
+                (subnet shr 8).toByte(),
+                subnet.toByte(),
+            ),
+        )
+    }
 
-            val ssdpMessage = "M-SEARCH * HTTP/1.1\r\n" +
-                "HOST: 239.255.255.250:1900\r\n" +
-                "MAN: \"ssdp:discover\"\r\n" +
-                "ST: upnp:rootdevice\r\n" +
-                "MX: 3\r\n\r\n"
-
-            val socket = DatagramSocket()
-            socket.soTimeout = 5000
-
-            val group = InetAddress.getByName("239.255.255.250")
-            val packet = DatagramPacket(
-                ssdpMessage.toByteArray(),
-                ssdpMessage.length,
-                group,
-                SSDP_PORT,
-            )
-
-            socket.send(packet)
-
-            // 监听响应
-            val buffer = ByteArray(1024)
-            val startTime = System.currentTimeMillis()
-
-            while (System.currentTimeMillis() - startTime < 5000) {
-                try {
-                    val responsePacket = DatagramPacket(buffer, buffer.size)
-                    socket.receive(responsePacket)
-
-                    val response = String(responsePacket.data, 0, responsePacket.length)
-                    val deviceIp = responsePacket.address.hostAddress
-
-                    if (response.contains("SERVER:") && deviceIp != null) {
-                        // 检查是否支持SMB
-                        if (checkSmbPort(deviceIp)) {
-                            val device = DeviceInfo(
-                                name = "UPnP Device",
-                                ip = deviceIp,
-                                protocol = "SSDP",
-                            )
-                            discoveredDevices.add(device)
-                            Log.d(TAG, "Added SSDP device: ${device.name} (${device.ip})")
-                        }
-                    }
-                } catch (e: SocketTimeoutException) {
-                    // 正常超时，继续
+    private fun getLocalAddress(): InetAddress? {
+        val interfaces = NetworkInterface.getNetworkInterfaces()
+        while (interfaces.hasMoreElements()) {
+            val intf = interfaces.nextElement()
+            val addresses = intf.inetAddresses
+            while (addresses.hasMoreElements()) {
+                val addr = addresses.nextElement()
+                if (!addr.isLoopbackAddress && addr is Inet4Address && addr.isSiteLocalAddress) {
+                    return addr
                 }
             }
-
-            socket.close()
-        } catch (e: Exception) {
-            Log.e(TAG, "SSDP discovery error: ${e.message}", e)
         }
+        return null
     }
 
-    /**
-     * WS-Discovery 发现
-     */
-    private suspend fun discoverViaWsDiscovery() = withContext(Dispatchers.IO) {
-        try {
-            Log.d(TAG, "Starting WS-Discovery")
-
-            val wsDiscoveryMessage = """
-                <?xml version="1.0" encoding="utf-8"?>
-                <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:wsd="http://schemas.xmlsoap.org/ws/2005/04/discovery">
-                    <soap:Header>
-                        <wsa:Action>http://schemas.xmlsoap.org/ws/2005/04/discovery/Probe</wsa:Action>
-                        <wsa:MessageID>urn:uuid:${java.util.UUID.randomUUID()}</wsa:MessageID>
-                        <wsa:To>urn:schemas-xmlsoap-org:ws:2005:04:discovery</wsa:To>
-                    </soap:Header>
-                    <soap:Body>
-                        <wsd:Probe/>
-                    </soap:Body>
-                </soap:Envelope>
-            """.trimIndent()
-
-            val socket = DatagramSocket()
-            socket.soTimeout = 3000
-
-            val group = InetAddress.getByName("239.255.255.250")
-            val packet = DatagramPacket(
-                wsDiscoveryMessage.toByteArray(),
-                wsDiscoveryMessage.length,
-                group,
-                WS_DISCOVERY_PORT,
-            )
-
-            socket.send(packet)
-
-            // 监听响应
-            val buffer = ByteArray(2048)
-            val startTime = System.currentTimeMillis()
-
-            while (System.currentTimeMillis() - startTime < 3000) {
-                try {
-                    val responsePacket = DatagramPacket(buffer, buffer.size)
-                    socket.receive(responsePacket)
-
-                    val deviceIp = responsePacket.address.hostAddress
-
-                    if (deviceIp != null && checkSmbPort(deviceIp)) {
-                        val device = DeviceInfo(
-                            name = "WS-Discovery Device",
-                            ip = deviceIp,
-                            protocol = "WS-Discovery",
-                        )
-                        discoveredDevices.add(device)
-                        Log.d(TAG, "Added WS-Discovery device: ${device.name} (${device.ip})")
-                    }
-                } catch (e: SocketTimeoutException) {
-                    // 正常超时，继续
-                }
-            }
-
-            socket.close()
-        } catch (e: Exception) {
-            Log.e(TAG, "WS-Discovery error: ${e.message}", e)
-        }
-    }
-
-    /**
-     * 子网扫描发现（回退方案）
-     */
-    private suspend fun discoverViaSubnetScan() = withContext(Dispatchers.IO) {
-        try {
-            Log.d(TAG, "Starting subnet scan discovery")
-
-            val subnet = getCurrentSubnet()
-            if (subnet == null) {
-                Log.w(TAG, "Cannot determine current subnet")
-                return@withContext
-            }
-
-            Log.d(TAG, "Scanning subnet: $subnet")
-
-            // 并行扫描子网中的IP地址
-            val jobs = mutableListOf<Job>()
-
-            for (i in 1..254) {
-                val job = async {
-                    val ip = "$subnet.$i"
-                    if (pingHost(ip) && checkSmbPort(ip)) {
-                        val device = DeviceInfo(
-                            name = "SMB Server",
-                            ip = ip,
-                            protocol = "Subnet Scan",
-                        )
-                        discoveredDevices.add(device)
-                        Log.d(TAG, "Added subnet scan device: ${device.name} (${device.ip})")
-                    }
-                }
-                jobs.add(job)
-            }
-
-            // 等待所有扫描完成
-            jobs.forEach { job ->
-                runCatching { job.join() }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Subnet scan error: ${e.message}", e)
-        }
-    }
-
-    /**
-     * 获取当前子网
-     */
-    private fun getCurrentSubnet(): String? {
-        try {
-            val wifiInfo = wifiManager.connectionInfo
-            val ipAddress = wifiInfo.ipAddress
-
-            if (ipAddress == 0) return null
-
-            val ip = String.format(
-                "%d.%d.%d",
-                ipAddress and 0xff,
-                ipAddress shr 8 and 0xff,
-                ipAddress shr 16 and 0xff,
-            )
-
-            return ip
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting current subnet: ${e.message}", e)
-            return null
-        }
-    }
-
-    /**
-     * Ping 主机检查连通性
-     */
-    private suspend fun pingHost(ip: String): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val address = InetAddress.getByName(ip)
-            address.isReachable(PING_TIMEOUT)
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    /**
-     * 检查SMB端口是否开放
-     */
-    private suspend fun checkSmbPort(ip: String): Boolean = withContext(Dispatchers.IO) {
-        try {
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress(ip, SMB_PORT), PING_TIMEOUT)
-                true
-            }
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    /**
-     * 停止发现
-     */
-    fun stopDiscovery() {
-        discoveryJob?.cancel()
-        discoveredDevices.clear()
-        Log.d(TAG, "Discovery stopped")
+    private fun getSubnet(addr: InetAddress): String {
+        val bytes = addr.address
+        return "${bytes[0].toInt() and 0xFF}.${bytes[1].toInt() and 0xFF}.${bytes[2].toInt() and 0xFF}"
     }
 }
-
-/**
- * 发现到的设备信息
- */
-data class DeviceInfo(
-    val name: String,
-    val ip: String,
-    val protocol: String,
-)

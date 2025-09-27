@@ -1,10 +1,10 @@
 package com.example.nasonly.data.repository
 
-import com.example.nasonly.data.discovery.DeviceInfo
 import com.example.nasonly.data.discovery.NasDiscoveryManager
 import com.example.nasonly.data.smb.SmbConnectionManager
 import com.example.nasonly.data.smb.SmbDataSource
 import com.example.nasonly.data.smb.SmbFileInfo
+import com.example.nasonly.model.NasDevice
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,17 +22,17 @@ class NasRepository @Inject constructor(
     /**
      * 发现网络中的NAS设备
      */
-    fun discoverNasDevices(): Flow<List<DeviceInfo>> {
-        return nasDiscoveryManager.startDiscovery()
+    fun discoverNasDevices(): Flow<List<NasDevice>> {
+        return nasDiscoveryManager.discoverAll()
     }
 
     /**
      * 连接到指定的NAS设备
      */
-    suspend fun connectToNas(deviceInfo: DeviceInfo, username: String, password: String): Boolean {
+    suspend fun connectToNas(device: NasDevice, username: String, password: String): Boolean {
         return try {
             // 先配置连接参数
-            smbConnectionManager.configure(deviceInfo.ip, "", username, password, "")
+            smbConnectionManager.configure(device.ip.hostAddress!!, "", username, password, "")
             // 然后尝试连接
             smbConnectionManager.connectAsync()
         } catch (e: Exception) {
@@ -52,7 +52,7 @@ class NasRepository @Inject constructor(
      * 停止设备发现
      */
     fun stopDiscovery() {
-        nasDiscoveryManager.stopDiscovery()
+        // nasDiscoveryManager 现在没有 stopDiscovery 方法，使用 Flow 的取消机制
     }
 
     /**
