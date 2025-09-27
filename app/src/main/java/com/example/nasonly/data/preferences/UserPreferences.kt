@@ -6,13 +6,14 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
 
 /**
  * 用户偏好设置数据存储
  */
-class UserPreferences(private val context: Context) {
+class UserPreferences @Inject constructor(private val context: Context) {
 
     // 播放器设置键
     companion object {
@@ -37,6 +38,10 @@ class UserPreferences(private val context: Context) {
         val GRID_LAYOUT = booleanPreferencesKey("grid_layout")
         val SORT_ORDER = stringPreferencesKey("sort_order") // "name", "date", "size"
         val SORT_ASCENDING = booleanPreferencesKey("sort_ascending")
+
+        // NAS连接设置
+        val LAST_NAS_IP = stringPreferencesKey("last_nas_ip")
+        val LAST_USERNAME = stringPreferencesKey("last_username")
 
         // 默认值
         const val DEFAULT_PLAYBACK_SPEED = 1.0f
@@ -99,6 +104,13 @@ class UserPreferences(private val context: Context) {
 
     val sortAscending: Flow<Boolean> = context.dataStore.data
         .map { preferences -> preferences[SORT_ASCENDING] ?: true }
+
+    // NAS连接设置
+    val lastNasIp: Flow<String?> = context.dataStore.data
+        .map { preferences -> preferences[LAST_NAS_IP] }
+
+    val lastUsername: Flow<String?> = context.dataStore.data
+        .map { preferences -> preferences[LAST_USERNAME] }
 
     // 设置保存方法
     suspend fun setPlaybackSpeed(speed: Float) {
@@ -194,6 +206,13 @@ class UserPreferences(private val context: Context) {
     suspend fun setSortAscending(ascending: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[SORT_ASCENDING] = ascending
+        }
+    }
+
+    suspend fun setLastNasConnection(ip: String, username: String) {
+        context.dataStore.edit { preferences ->
+            preferences[LAST_NAS_IP] = ip
+            preferences[LAST_USERNAME] = username
         }
     }
 }

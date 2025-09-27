@@ -17,4 +17,6 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 13+ 本地网络/附近设备（只做局域网发现，不需要定位） -->
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
 </manifest>

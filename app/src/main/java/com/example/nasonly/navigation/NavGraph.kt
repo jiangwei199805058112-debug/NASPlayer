@@ -8,22 +8,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.nasonly.ui.discovery.NasDiscoveryScreen
 import com.example.nasonly.ui.screens.EnhancedSettingsScreen
 import com.example.nasonly.ui.screens.MediaLibraryScreen
 import com.example.nasonly.ui.screens.NasConfigScreen
 import com.example.nasonly.ui.screens.PlaylistDetailScreen
 import com.example.nasonly.ui.screens.PlaylistManagementScreen
 import com.example.nasonly.ui.screens.VideoPlayerScreen
+import com.example.nasonly.ui.startup.StartupScreen
 
 @Composable
 fun NavGraph(
-    startDestination: String,
+    startDestination: String = "startup",
     navController: NavHostController = rememberNavController(),
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
-        composable(Routes.NAS_DISCOVERY) {
-            NasDiscoveryScreen(navController)
+        composable("startup") {
+            StartupScreen(navController)
         }
         composable(Routes.NAS_CONFIG) {
             NasConfigScreen(navController)
@@ -40,15 +40,18 @@ fun NavGraph(
             route = "media/{host}?share={share}",
             arguments = listOf(
                 navArgument("host") { type = NavType.StringType },
-                navArgument("share") { type = NavType.StringType; defaultValue = "" }
-            )
+                navArgument("share") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+            ),
         ) { backStackEntry ->
             val host = backStackEntry.arguments?.getString("host").orEmpty()
             val share = backStackEntry.arguments?.getString("share").orEmpty()
             MediaLibraryScreen(
                 navController = navController,
                 host = host,
-                share = share
+                share = share,
             )
         }
         composable(Routes.PLAYLIST_MANAGEMENT) {

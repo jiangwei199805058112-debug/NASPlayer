@@ -2,11 +2,14 @@ package com.example.nasonly.ui.discovery
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.nasonly.data.discovery.DeviceInfo
+import com.example.nasonly.data.discovery.NasDiscoveryManager
+import com.example.nasonly.data.preferences.UserPreferences
 import com.example.nasonly.data.smb.SmbManager
+import com.example.nasonly.model.NasDevice
 import com.example.nasonly.model.NasHost
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -16,7 +19,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NasDiscoveryViewModel @Inject constructor(
-    private val smb: SmbManager
+    private val smb: SmbManager,
+    private val discoveryManager: NasDiscoveryManager,
+    private val userPreferences: UserPreferences,
 ) : ViewModel() {
 
     sealed interface UiState {
@@ -38,28 +43,42 @@ class NasDiscoveryViewModel @Inject constructor(
 
     private val connectMutex = Mutex()
 
-    // 简单的发现状态（模拟）
-    data class DiscoveryState(
+    // 发现UI状态
+    data class DiscoveryUiState(
         val isDiscovering: Boolean = false,
-        val isConnecting: Boolean = false,
-        val devices: List<DeviceInfo> = emptyList()
+        val devices: List<NasDevice> = emptyList(),
+        val error: String? = null,
     )
-    private val _discoveryState = MutableStateFlow(DiscoveryState())
-    val discoveryState: StateFlow<DiscoveryState> = _discoveryState.asStateFlow()
+    private val _discoveryState = MutableStateFlow(DiscoveryUiState())
+    val discoveryState: StateFlow<DiscoveryUiState> = _discoveryState.asStateFlow()
+
+    private var discoveryJob: Job? = null
 
     /**
-     * 开始发现NAS设备（模拟）
+     * 开始发现NAS设备
      */
     fun startDiscovery() {
-        _discoveryState.value = _discoveryState.value.copy(isDiscovering = true)
-        // 模拟发现一些设备
-        viewModelScope.launch {
-            kotlinx.coroutines.delay(2000) // 模拟延迟
-            val mockDevices = listOf(
-                DeviceInfo("NAS-001", "192.168.1.100", "SMB"),
-                DeviceInfo("NAS-002", "192.168.1.101", "SMB")
-            )
-            _discoveryState.value = _discoveryState.value.copy(isDiscovering = false, devices = mockDevices)
+        if (discoveryJob?.isActive == true) return
+
+        _discoveryState.value = DiscoveryUiState(isDiscovering = true, devices = emptyList(), error = null)
+        discoveryManager.acquireMulticastLock()
+
+        discoveryJob = viewModelScope.launch {
+            try {
+                discoveryManager.discoverAll()
+                    .collect { devices ->
+                        _discoveryState.value = _discoveryState.value.copy(devices = devices)
+                    }
+            } catch (e: Exception) {
+                Timber.w(e, "Discovery failed")
+                _discoveryState.value = _discoveryState.value.copy(
+                    isDiscovering = false,
+                    error = e.message ?: "发现失败",
+                )
+            } finally {
+                _discoveryState.value = _discoveryState.value.copy(isDiscovering = false)
+                discoveryManager.releaseMulticastLock()
+            }
         }
     }
 
@@ -67,19 +86,22 @@ class NasDiscoveryViewModel @Inject constructor(
      * 停止发现
      */
     fun stopDiscovery() {
+        discoveryJob?.cancel()
+        discoveryJob = null
         _discoveryState.value = _discoveryState.value.copy(isDiscovering = false)
+        discoveryManager.releaseMulticastLock()
     }
 
     /**
      * 连接到指定设备
      */
-    fun connectToDevice(device: DeviceInfo, username: String, password: String) {
+    fun connectToDevice(device: NasDevice, username: String, password: String) {
         val host = NasHost(
-            host = device.ip,
+            host = device.ip.hostAddress!!,
             share = "", // 默认空，或从某处获取
             username = username,
             password = password,
-            domain = ""
+            domain = "",
         )
         connect(host)
     }
@@ -94,10 +116,12 @@ class NasDiscoveryViewModel @Inject constructor(
                         share = host.share,
                         username = host.username,
                         password = host.password,
-                        domain = host.domain
+                        domain = host.domain,
                     )
                 }.onSuccess {
                     Timber.i("SMB Connected: $host")
+                    // 保存最后连接的NAS信息
+                    userPreferences.setLastNasConnection(host.host, host.username)
                     _uiState.value = UiState.Connected(host)
                     _navEvents.tryEmit(NavEvent.ToLibrary(host))
                 }.onFailure { e ->
