@@ -12,4 +12,13 @@ import javax.inject.Singleton
 object SmbModule {
     @Provides @Singleton
     fun provideSmbScanner(): SmbScanner = SmbScanner(Dispatchers.IO)
+
+    @Provides @Singleton
+    fun provideSmbShareEnumerator(): SmbShareEnumerator = SmbShareEnumerator()
+
+    @Provides @Singleton
+    fun provideSmbHostScanner(
+        shareEnumerator: SmbShareEnumerator,
+        fileScanner: SmbScanner
+    ): SmbHostScanner = SmbHostScanner(shareEnumerator, fileScanner, Dispatchers.IO)
 }
