@@ -27,24 +27,24 @@ fun StartupScreen(
                     navController.navigate("media/${host.host}?share=${host.share}") {
                         popUpTo("startup") { inclusive = true }
                     }
-                } catch (e: Exception) {
+                } catch (e: IllegalArgumentException) {
                     Timber.e(e, "Failed to navigate to media library: ${host.host}")
                     // 回退到发现屏幕
                     try {
-                        navController.navigate(Routes.NAS_DISCOVERY) {
+                        navController.navigate("nas_discovery") {
                             popUpTo("startup") { inclusive = true }
                         }
-                    } catch (navException: Exception) {
+                    } catch (navException: IllegalArgumentException) {
                         Timber.e(navException, "Failed to navigate to discovery screen")
                     }
                 }
             }
             StartupViewModel.StartupState.GoToDiscovery -> {
                 try {
-                    navController.navigate(Routes.NAS_DISCOVERY) {
+                    navController.navigate("nas_discovery") {
                         popUpTo("startup") { inclusive = true }
                     }
-                } catch (e: Exception) {
+                } catch (e: IllegalArgumentException) {
                     Timber.e(e, "Failed to navigate to discovery screen")
                 }
             }

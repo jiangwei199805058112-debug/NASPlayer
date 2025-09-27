@@ -42,7 +42,7 @@ fun NasDiscoveryScreen(
                             popUpTo("discovery") { inclusive = true }
                             launchSingleTop = true
                         }
-                    } catch (e: Exception) {
+                    } catch (e: IllegalArgumentException) {
                         Timber.e(e, "Failed to navigate to media library for host: ${host.host}")
                     }
                 }
