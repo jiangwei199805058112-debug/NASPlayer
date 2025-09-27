@@ -15,9 +15,11 @@ import com.hierynomus.mssmb2.SMB2CreateDisposition
 import com.hierynomus.mssmb2.SMB2CreateOptions
 import com.hierynomus.mssmb2.SMB2ShareAccess
 import com.hierynomus.mssmb2.SMBApiException
+import com.hierynomus.mssmb2.SMB2ImpersonationLevel
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.EnumSet
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -414,7 +416,11 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             Log.d(TAG, "Listing directory: $shareName/$relativePath using smbj")
             val files = mutableListOf<SmbFileInfo>()
             val dir = if (relativePath.isEmpty()) "" else relativePath
-            val dirHandle = currentShare.openDirectory(dir, emptySet(), emptySet(), com.hierynomus.mssmb2.SMB2ShareAccess.ALL, null, emptySet())
+            val createDisposition = EnumSet.of(SMB2CreateDisposition.FILE_OPEN)
+            val createOptions = EnumSet.of(SMB2CreateOptions.FILE_DIRECTORY_FILE)
+            val shareAccess = SMB2ShareAccess.ALL
+            val fileAttributes = EnumSet.noneOf(FileAttributes::class.java)
+            val dirHandle = currentShare.openDirectory(dir, createDisposition, createOptions, shareAccess, null, fileAttributes)
             dirHandle.list().forEach { fileInfo ->
                 val fileName = fileInfo.fileName
                 val fileAttributes = fileInfo.fileAttributes
