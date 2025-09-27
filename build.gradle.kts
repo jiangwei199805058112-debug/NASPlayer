@@ -14,13 +14,6 @@ detekt {
     baseline = project.file("$projectDir/config/detekt/baseline.xml")
     buildUponDefaultConfig = true
     allRules = false
-
-    reports {
-        html.required.set(true)
-        xml.required.set(true)
-        txt.required.set(true)
-        md.required.set(true)
-    }
 }
 
 // Configure ktlint
