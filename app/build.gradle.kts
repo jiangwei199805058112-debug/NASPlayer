@@ -57,7 +57,7 @@ android {
 configurations.all {
     resolutionStrategy {
         force("org.bouncycastle:bcprov-jdk18on:1.76")
-        exclude group: "org.bouncycastle", module: "bcprov-jdk15on"
+        exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
     }
 }
 
