@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
-    id("io.gitlab.arturbosch.detekt") version "1.23.1"
+    id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("jacoco")
 }
 
@@ -55,10 +55,11 @@ android {
 
 configurations.all {
     resolutionStrategy {
-        force("org.bouncycastle:bcprov-jdk18on:1.76")
-        exclude(group = "org.bouncycastle", module = "bcprov-jdk15on")
-    }
-}
+    detekt { 
+        toolVersion = "1.23.6"
+        config.setFrom(files("$projectDir/../config/detekt/detekt.yml"))
+        buildUponDefaultConfig = true
+        allRules = false 
 
 jacoco {
     toolVersion = "0.8.11"
