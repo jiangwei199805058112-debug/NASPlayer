@@ -1,0 +1,46 @@
+name: Documentation Auto Commit
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'README.md'
+
+jobs:
+  auto-commit-docs:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'  # 防止bot循环
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for documentation changes
+        id: check_changes
+        run: |
+          # 检查是否有未提交的更改（通常是自动化工具生成的）
+          if [[ -n $(git status --porcelain docs/ *.md) ]]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📝 Found documentation changes to commit"
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "✅ No documentation changes to commit"
+          fi
+
+      - name: Commit documentation changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git add docs/ *.md
+          git commit -m "docs: auto-update documentation [skip ci]"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
