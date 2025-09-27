@@ -29,10 +29,10 @@ class NasRepository @Inject constructor(
     /**
      * 连接到指定的NAS设备
      */
-    suspend fun connectToNas(device: NasDevice, username: String, password: String): Boolean {
+    suspend fun connectToNas(device: NasDevice, username: String, password: String, share: String = "public"): Boolean {
         return try {
-            // 先配置连接参数
-            smbConnectionManager.configure(device.ip.hostAddress!!, "", username, password, "")
+            // 先配置连接参数，使用提供的共享名称或默认值
+            smbConnectionManager.configure(device.ip.hostAddress!!, share, username, password, "")
             // 然后尝试连接
             smbConnectionManager.connectAsync()
         } catch (e: Exception) {

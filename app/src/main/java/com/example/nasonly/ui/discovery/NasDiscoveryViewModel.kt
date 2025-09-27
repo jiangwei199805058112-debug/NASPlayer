@@ -104,7 +104,7 @@ class NasDiscoveryViewModel @Inject constructor(
     fun connectToDevice(device: NasDevice, username: String, password: String) {
         val host = NasHost(
             host = device.ip.hostAddress!!,
-            share = "", // 默认空，或从某处获取
+            share = "public", // 默认共享名称
             username = username,
             password = password,
             domain = "",
