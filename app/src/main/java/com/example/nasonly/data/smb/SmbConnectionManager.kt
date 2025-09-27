@@ -345,7 +345,7 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             Log.d(TAG, "Listing directory: $path (relative: $relativePath) using smbj")
 
             val files = mutableListOf<SmbFileInfo>()
-            val directoryPath = if (relativePath.isEmpty()) "*" else "$relativePath/*"
+            val directoryPath = relativePath
 
             currentShare.list(directoryPath).forEach { fileInfo ->
                 val fileName = fileInfo.fileName
