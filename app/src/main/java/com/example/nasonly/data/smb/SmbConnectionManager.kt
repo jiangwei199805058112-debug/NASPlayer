@@ -417,9 +417,9 @@ class SmbConnectionManager @Inject constructor() : SmbManager {
             val files = mutableListOf<SmbFileInfo>()
             val dir = if (relativePath.isEmpty()) "" else relativePath
             val desiredAccess = EnumSet.of(AccessMask.GENERIC_READ)
-            val createDisposition = EnumSet.of(SMB2CreateDisposition.FILE_OPEN)
+            val createDisposition = SMB2CreateDisposition.FILE_OPEN
             val createOptions = EnumSet.of(SMB2CreateOptions.FILE_DIRECTORY_FILE)
-            val shareAccess = SMB2ShareAccess.ALL
+            val shareAccess = EnumSet.of(SMB2ShareAccess.FILE_SHARE_READ)
             val fileAttributes = EnumSet.noneOf(FileAttributes::class.java)
             val method = DiskShare::class.java.declaredMethods.find { it.name == "openDirectory" && it.parameterCount == 6 && it.returnType == com.hierynomus.smbj.share.Directory::class.java }
             val dirHandle = method?.invoke(currentShare, dir, fileAttributes, createOptions, shareAccess, createDisposition, null) as com.hierynomus.smbj.share.Directory
