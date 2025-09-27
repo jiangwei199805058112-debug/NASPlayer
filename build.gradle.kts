@@ -14,13 +14,17 @@ detekt {
     baseline = project.file("$projectDir/config/detekt/baseline.xml")
     buildUponDefaultConfig = true
     allRules = false
+}
 
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     reports {
         html.required.set(true)
         xml.required.set(true)
         txt.required.set(true)
+        sarif.required.set(true)
         md.required.set(true)
     }
+    jvmTarget = "17"
 }
 
 // Configure ktlint
