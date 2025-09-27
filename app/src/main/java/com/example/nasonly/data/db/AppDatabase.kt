@@ -12,10 +12,10 @@ import androidx.room.RoomDatabase.Builder
         PlaybackHistory::class,
         Playlist::class,
         PlaylistItem::class,
-        ScanProgress::class
+        ScanProgress::class,
     ],
     version = 2,
-    exportSchema = false
+    exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun videoDao(): VideoDao
@@ -33,7 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "app_database.db"
+                    "app_database.db",
                 )
                     .fallbackToDestructiveMigration()
                     .allowMainThreadQueriesIfDebug()

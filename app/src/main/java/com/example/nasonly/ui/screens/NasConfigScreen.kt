@@ -14,10 +14,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.nasonly.ui.viewmodel.NasConfigViewModel
-import com.example.nasonly.navigation.Routes
-import com.example.nasonly.core.ui.components.LoadingIndicator
 import com.example.nasonly.core.ui.components.ErrorDialog
+import com.example.nasonly.navigation.Routes
+import com.example.nasonly.ui.viewmodel.NasConfigViewModel
 
 data class SmbProtocol(val name: String, val value: String)
 data class SharedFolder(val name: String, val path: String, var isSelected: Boolean = false)
@@ -27,10 +26,10 @@ data class DiscoveredNas(val name: String, val ip: String, val icon: ImageVector
 @Composable
 fun NasConfigScreen(
     navController: NavController,
-    viewModel: NasConfigViewModel = hiltViewModel()
+    viewModel: NasConfigViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     var host by remember { mutableStateOf(uiState.host) }
     var username by remember { mutableStateOf(uiState.username) }
     var password by remember { mutableStateOf(uiState.password) }
@@ -40,11 +39,11 @@ fun NasConfigScreen(
     var showFolderSelection by remember { mutableStateOf(false) }
     var isDiscovering by remember { mutableStateOf(false) }
     var showDiscoveryDialog by remember { mutableStateOf(false) }
-    
+
     val smbProtocols = listOf(
         SmbProtocol("Auto (推荐)", "Auto"),
         SmbProtocol("SMB3", "3.0"),
-        SmbProtocol("SMB2", "2.1")
+        SmbProtocol("SMB2", "2.1"),
     )
 
     LaunchedEffect(Unit) {
@@ -55,7 +54,7 @@ fun NasConfigScreen(
         discoveredDevices = listOf(
             DiscoveredNas("QNAP-NAS", "192.168.1.100"),
             DiscoveredNas("Synology-DS", "192.168.1.101"),
-            DiscoveredNas("Windows-Share", "192.168.1.102")
+            DiscoveredNas("Windows-Share", "192.168.1.102"),
         )
         isDiscovering = false
     }
@@ -64,77 +63,77 @@ fun NasConfigScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             text = "NAS 配置",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
         )
 
         // 自动发现区域
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp),
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "搜索设备"
+                        contentDescription = "搜索设备",
                     )
                     Text(
                         text = "发现的设备",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
                     )
                     if (isDiscovering) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
+                            strokeWidth = 2.dp,
                         )
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(
-                        onClick = { showDiscoveryDialog = true }
+                        onClick = { showDiscoveryDialog = true },
                     ) {
                         Text("查看全部")
                     }
                 }
-                
+
                 if (discoveredDevices.isNotEmpty() && !isDiscovering) {
                     discoveredDevices.take(2).forEach { device ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = device.icon,
                                 contentDescription = device.name,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = device.name,
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium,
                                 )
                                 Text(
                                     text = device.ip,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             TextButton(
-                                onClick = { host = device.ip }
+                                onClick = { host = device.ip },
                             ) {
                                 Text("选择")
                             }
@@ -147,7 +146,7 @@ fun NasConfigScreen(
         // NAS 连接配置
         OutlinedTextField(
             value = host,
-            onValueChange = { 
+            onValueChange = {
                 host = it
                 showFolderSelection = false
                 sharedFolders = emptyList()
@@ -157,15 +156,15 @@ fun NasConfigScreen(
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Computer,
-                    contentDescription = "NAS地址"
+                    contentDescription = "NAS地址",
                 )
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutlinedTextField(
                 value = username,
@@ -174,10 +173,10 @@ fun NasConfigScreen(
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Person,
-                        contentDescription = "用户名"
+                        contentDescription = "用户名",
                     )
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             OutlinedTextField(
@@ -187,10 +186,10 @@ fun NasConfigScreen(
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Lock,
-                        contentDescription = "密码"
+                        contentDescription = "密码",
                     )
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
 
@@ -198,7 +197,7 @@ fun NasConfigScreen(
         var expanded by remember { mutableStateOf(false) }
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
+            onExpandedChange = { expanded = !expanded },
         ) {
             OutlinedTextField(
                 value = selectedSmbProtocol,
@@ -208,7 +207,7 @@ fun NasConfigScreen(
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "SMB协议"
+                        contentDescription = "SMB协议",
                     )
                 },
                 trailingIcon = {
@@ -216,11 +215,11 @@ fun NasConfigScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor()
+                    .menuAnchor(),
             )
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
             ) {
                 smbProtocols.forEach { protocol ->
                     DropdownMenuItem(
@@ -228,7 +227,7 @@ fun NasConfigScreen(
                         onClick = {
                             selectedSmbProtocol = protocol.name
                             expanded = false
-                        }
+                        },
                     )
                 }
             }
@@ -237,17 +236,17 @@ fun NasConfigScreen(
         // 共享文件夹选择（仅在连接成功后显示）
         if (showFolderSelection && sharedFolders.isNotEmpty()) {
             Card(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp),
                 ) {
                     Text(
                         text = "选择共享文件夹",
                         style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 8.dp),
                     )
-                    
+
                     sharedFolders.forEach { folder ->
                         Row(
                             modifier = Modifier
@@ -258,12 +257,14 @@ fun NasConfigScreen(
                                         sharedFolders = sharedFolders.map {
                                             if (it.name == folder.name) {
                                                 it.copy(isSelected = !it.isSelected)
-                                            } else it
+                                            } else {
+                                                it
+                                            }
                                         }
-                                    }
+                                    },
                                 )
                                 .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Checkbox(
                                 checked = folder.isSelected,
@@ -271,15 +272,17 @@ fun NasConfigScreen(
                                     sharedFolders = sharedFolders.map {
                                         if (it.name == folder.name) {
                                             it.copy(isSelected = isChecked)
-                                        } else it
+                                        } else {
+                                            it
+                                        }
                                     }
-                                }
+                                },
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
                                 imageVector = Icons.Default.Folder,
                                 contentDescription = "文件夹",
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(20.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = folder.name)
@@ -294,7 +297,7 @@ fun NasConfigScreen(
         // 按钮区域
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Button(
                 onClick = {
@@ -307,24 +310,24 @@ fun NasConfigScreen(
                             SharedFolder("Video", "/Video"),
                             SharedFolder("Media", "/Media"),
                             SharedFolder("Movies", "/Movies"),
-                            SharedFolder("Photos", "/Photos")
+                            SharedFolder("Photos", "/Photos"),
                         )
                         showFolderSelection = true
                     }
                 },
                 modifier = Modifier.weight(1f),
-                enabled = host.isNotEmpty() && username.isNotEmpty() && !uiState.isLoading
+                enabled = host.isNotEmpty() && username.isNotEmpty() && !uiState.isLoading,
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Wifi,
                         contentDescription = "测试连接",
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("测试连接")
@@ -341,14 +344,14 @@ fun NasConfigScreen(
                     }
                 },
                 modifier = Modifier.weight(1f),
-                enabled = host.isNotEmpty() && username.isNotEmpty() && 
-                         (!showFolderSelection || sharedFolders.any { it.isSelected }) && 
-                         !uiState.isLoading
+                enabled = host.isNotEmpty() && username.isNotEmpty() &&
+                    (!showFolderSelection || sharedFolders.any { it.isSelected }) &&
+                    !uiState.isLoading,
             ) {
                 Icon(
                     imageVector = Icons.Default.Save,
-                    contentDescription = "保存配置", 
-                    modifier = Modifier.size(18.dp)
+                    contentDescription = "保存配置",
+                    modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("保存并继续")
@@ -367,12 +370,12 @@ fun NasConfigScreen(
                         MaterialTheme.colorScheme.primaryContainer
                     } else {
                         MaterialTheme.colorScheme.errorContainer
-                    }
-                )
+                    },
+                ),
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         imageVector = if (testResult.contains("成功")) Icons.Default.CheckCircle else Icons.Default.Error,
@@ -381,7 +384,7 @@ fun NasConfigScreen(
                             MaterialTheme.colorScheme.primary
                         } else {
                             MaterialTheme.colorScheme.error
-                        }
+                        },
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -390,7 +393,7 @@ fun NasConfigScreen(
                             MaterialTheme.colorScheme.onPrimaryContainer
                         } else {
                             MaterialTheme.colorScheme.onErrorContainer
-                        }
+                        },
                     )
                 }
             }
@@ -409,30 +412,30 @@ fun NasConfigScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 imageVector = device.icon,
                                 contentDescription = device.name,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = device.name,
-                                    style = MaterialTheme.typography.bodyLarge
+                                    style = MaterialTheme.typography.bodyLarge,
                                 )
                                 Text(
                                     text = device.ip,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             TextButton(
-                                onClick = { 
+                                onClick = {
                                     host = device.ip
                                     showDiscoveryDialog = false
-                                }
+                                },
                             ) {
                                 Text("选择")
                             }
@@ -442,11 +445,11 @@ fun NasConfigScreen(
             },
             confirmButton = {
                 TextButton(
-                    onClick = { showDiscoveryDialog = false }
+                    onClick = { showDiscoveryDialog = false },
                 ) {
                     Text("关闭")
                 }
-            }
+            },
         )
     }
 
@@ -458,7 +461,7 @@ fun NasConfigScreen(
             onDismiss = { viewModel.clearError() },
             onRetry = {
                 viewModel.testConnection(host, "", username, password, "", selectedSmbProtocol)
-            }
+            },
         )
     }
 }

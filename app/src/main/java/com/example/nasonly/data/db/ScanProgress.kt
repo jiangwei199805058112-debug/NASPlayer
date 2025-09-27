@@ -7,5 +7,5 @@ import androidx.room.PrimaryKey
 data class ScanProgress(
     @PrimaryKey val id: Int = 1,
     val running: Boolean,
-    val lastScanAt: Long
+    val lastScanAt: Long,
 )

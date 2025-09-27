@@ -4,18 +4,14 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.example.nasonly.data.smb.SmbDataSource
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.datasource.DataSource
-import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.common.util.Util
+import com.example.nasonly.data.smb.SmbDataSource
 
 class ExoPlayerManager(
     private val context: Context,
-    private val smbDataSource: SmbDataSource
+    private val smbDataSource: SmbDataSource,
 ) : DefaultLifecycleObserver {
     private var exoPlayer: ExoPlayer? = null
 
@@ -49,7 +45,7 @@ class ExoPlayerManager(
 
     fun setPlaybackSpeed(speed: Float) {
         exoPlayer?.setPlaybackParameters(
-            exoPlayer!!.playbackParameters.withSpeed(speed)
+            exoPlayer!!.playbackParameters.withSpeed(speed),
         )
     }
 

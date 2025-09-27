@@ -33,7 +33,7 @@ abstract class SmbModule {
         fun provideNasRepository(
             smbConnectionManager: SmbConnectionManager,
             smbDataSource: SmbDataSource,
-            nasDiscoveryManager: NasDiscoveryManager
+            nasDiscoveryManager: NasDiscoveryManager,
         ): NasRepository {
             return NasRepository(smbConnectionManager, smbDataSource, nasDiscoveryManager)
         }

@@ -1,9 +1,9 @@
 package com.example.nasonly.data.smb
 
 import kotlinx.coroutines.runBlocking
-import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Ignore
+import org.junit.Test
 
 /**
  * SMB异步连接功能测试
@@ -14,7 +14,7 @@ class SmbAsyncConnectionTest {
     @Test
     fun testSmbConnectionManager_asyncMethods() {
         val smbConnectionManager = SmbConnectionManager()
-        
+
         // 测试异步配置
         runBlocking {
             smbConnectionManager.configure(
@@ -22,10 +22,10 @@ class SmbAsyncConnectionTest {
                 share = "media",
                 username = "testuser",
                 password = "testpass",
-                domain = ""
+                domain = "",
             )
         }
-        
+
         // 验证配置没有抛出异常
         assertTrue("异步配置应该成功", true)
     }
@@ -33,17 +33,17 @@ class SmbAsyncConnectionTest {
     @Test
     fun testSmbConnectionManager_validateConnectionAsync() {
         val smbConnectionManager = SmbConnectionManager()
-        
+
         runBlocking {
             // 配置无效参数
             smbConnectionManager.configure("", "", "", "", "")
-            
+
             // 测试异步验证
             val result = smbConnectionManager.validateConnectionAsync()
-            
+
             // 应该返回错误，因为参数为空
             assertTrue("空参数应该返回错误", result is SmbConnectionResult.Error)
-            
+
             if (result is SmbConnectionResult.Error) {
                 assertTrue("错误消息应该提到主机地址", result.message.contains("主机地址"))
             }
@@ -54,16 +54,16 @@ class SmbAsyncConnectionTest {
     @Ignore("需要网络连接，在CI环境中跳过")
     fun testSmbConnectionManager_asyncConnect() {
         val smbConnectionManager = SmbConnectionManager()
-        
+
         runBlocking {
             // 配置有效但不存在的服务器
             smbConnectionManager.configure(
                 host = "192.168.1.999", // 不存在的IP
                 share = "test",
                 username = "test",
-                password = "test"
+                password = "test",
             )
-            
+
             // 在单元测试环境中，网络连接会失败
             // 测试异步方法不会抛出异常即可
             try {
@@ -81,10 +81,10 @@ class SmbAsyncConnectionTest {
     fun testSmbConnectionResult_types() {
         val successResult = SmbConnectionResult.Success("连接成功")
         val errorResult = SmbConnectionResult.Error("连接失败")
-        
+
         assertTrue("Success结果应该是Success类型", successResult is SmbConnectionResult.Success)
         assertTrue("Error结果应该是Error类型", errorResult is SmbConnectionResult.Error)
-        
+
         assertEquals("Success消息应该正确", "连接成功", successResult.message)
         assertEquals("Error消息应该正确", "连接失败", errorResult.message)
     }
@@ -93,7 +93,7 @@ class SmbAsyncConnectionTest {
     @Ignore("在单元测试环境中跳过，需要模拟环境")
     fun testSmbConnectionManager_asyncDisconnect() {
         val smbConnectionManager = SmbConnectionManager()
-        
+
         runBlocking {
             // 测试异步断开连接不会抛出异常
             try {

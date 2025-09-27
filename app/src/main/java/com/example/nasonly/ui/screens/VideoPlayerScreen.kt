@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -23,30 +22,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.nasonly.ui.viewmodel.VideoPlayerViewModel
-import com.example.nasonly.ui.viewmodel.VideoPlayerUiState
 import com.example.nasonly.core.ui.components.ErrorDialog
 import com.example.nasonly.core.ui.components.LoadingIndicator
 import com.example.nasonly.ui.utils.ImmersiveFullscreenManager
+import com.example.nasonly.ui.viewmodel.VideoPlayerUiState
+import com.example.nasonly.ui.viewmodel.VideoPlayerViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun VideoPlayerScreen(
     uri: String,
-    viewModel: VideoPlayerViewModel = hiltViewModel()
+    viewModel: VideoPlayerViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val activity = context as Activity
-    
+
     // 控制UI状态
     var showControls by remember { mutableStateOf(true) }
     var showPlayPauseIcon by remember { mutableStateOf(false) }
@@ -96,7 +93,7 @@ fun VideoPlayerScreen(
                     onTap = { offset ->
                         val screenWidth = size.width
                         val tapX = offset.x
-                        
+
                         when {
                             // 左侧1/3：快退
                             tapX < screenWidth * 0.33f -> {
@@ -105,7 +102,7 @@ fun VideoPlayerScreen(
                                 seekFeedbackPosition = 0.2f
                                 showSeekFeedback = true
                             }
-                            // 右侧1/3：快进  
+                            // 右侧1/3：快进
                             tapX > screenWidth * 0.67f -> {
                                 viewModel.fastForward()
                                 seekFeedbackText = "⏩ +10s"
@@ -121,7 +118,7 @@ fun VideoPlayerScreen(
                     onDoubleTap = { offset ->
                         val screenWidth = size.width
                         val tapX = offset.x
-                        
+
                         when {
                             // 左侧1/3：快退
                             tapX < screenWidth * 0.33f -> {
@@ -147,20 +144,20 @@ fun VideoPlayerScreen(
                                 showPlayPauseIcon = true
                             }
                         }
-                    }
+                    },
                 )
-            }
+            },
     ) {
         // 视频播放器区域
         VideoPlayerView(
             modifier = Modifier.fillMaxSize(),
-            uiState = uiState
+            uiState = uiState,
         )
 
         // 缓冲指示器
         if (uiState.isBuffering) {
             LoadingIndicator(
-                modifier = Modifier.align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center),
             )
         }
 
@@ -169,25 +166,25 @@ fun VideoPlayerScreen(
             visible = showPlayPauseIcon,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.align(Alignment.Center),
         ) {
             Card(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.Black.copy(alpha = 0.6f)
-                )
+                    containerColor = Color.Black.copy(alpha = 0.6f),
+                ),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = if (uiState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(40.dp),
                     )
                 }
             }
@@ -199,23 +196,23 @@ fun VideoPlayerScreen(
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.align(
-                if (seekFeedbackPosition < 0.5f) Alignment.CenterStart else Alignment.CenterEnd
-            )
+                if (seekFeedbackPosition < 0.5f) Alignment.CenterStart else Alignment.CenterEnd,
+            ),
         ) {
             Card(
                 modifier = Modifier
                     .padding(horizontal = 32.dp)
                     .clip(RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.Black.copy(alpha = 0.7f)
-                )
+                    containerColor = Color.Black.copy(alpha = 0.7f),
+                ),
             ) {
                 Text(
                     text = seekFeedbackText,
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp),
                 )
             }
         }
@@ -225,7 +222,7 @@ fun VideoPlayerScreen(
             visible = showControls,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter),
         ) {
             EnhancedVideoPlayerControls(
                 uiState = uiState,
@@ -234,7 +231,7 @@ fun VideoPlayerScreen(
                 onToggleFavorite = viewModel::toggleFavorite,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp),
             )
         }
 
@@ -243,7 +240,7 @@ fun VideoPlayerScreen(
         if (errorMessage != null) {
             ErrorDialog(
                 message = errorMessage,
-                onDismiss = { viewModel.clearError() }
+                onDismiss = { viewModel.clearError() },
             )
         }
     }
@@ -260,11 +257,11 @@ fun VideoPlayerScreen(
 @Composable
 private fun VideoPlayerView(
     modifier: Modifier = Modifier,
-    uiState: VideoPlayerUiState
+    uiState: VideoPlayerUiState,
 ) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         // 这里将来可以集成真实的 ExoPlayer PlayerView
         // 目前显示占位内容
@@ -272,7 +269,7 @@ private fun VideoPlayerView(
             Text(
                 text = "视频播放区域\n${if (uiState.isPlaying) "播放中" else "已暂停"}",
                 color = Color.White,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -284,7 +281,7 @@ private fun EnhancedVideoPlayerControls(
     uiState: VideoPlayerUiState,
     onSeek: (Long) -> Unit,
     onSpeedChange: (Float) -> Unit,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
 ) {
     val speedOptions = listOf(0.5f, 1.0f, 1.5f, 2.0f)
     var showSpeedMenu by remember { mutableStateOf(false) }
@@ -292,101 +289,101 @@ private fun EnhancedVideoPlayerControls(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = Color.Black.copy(alpha = 0.8f)
+            containerColor = Color.Black.copy(alpha = 0.8f),
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // 进度条
             EnhancedVideoProgressBar(
                 currentPosition = uiState.currentPosition,
                 duration = uiState.duration,
-                onSeek = onSeek
+                onSeek = onSeek,
             )
-            
+
             // 控制按钮行
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // 左侧：当前时间
                 Text(
                     text = formatTime(uiState.currentPosition),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
-                
+
                 // 中间：控制按钮组
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // 倍速按钮
                     Box {
                         TextButton(
                             onClick = { showSpeedMenu = true },
                             colors = ButtonDefaults.textButtonColors(
-                                contentColor = Color.White
-                            )
+                                contentColor = Color.White,
+                            ),
                         ) {
                             Text(
                                 text = "${uiState.playbackSpeed}×",
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
                             )
                         }
-                        
+
                         DropdownMenu(
                             expanded = showSpeedMenu,
-                            onDismissRequest = { showSpeedMenu = false }
+                            onDismissRequest = { showSpeedMenu = false },
                         ) {
                             speedOptions.forEach { speed ->
                                 DropdownMenuItem(
-                                    text = { 
+                                    text = {
                                         Text(
-                                            text = "${speed}×",
-                                            fontWeight = if (speed == uiState.playbackSpeed) FontWeight.Bold else FontWeight.Normal
+                                            text = "$speed×",
+                                            fontWeight = if (speed == uiState.playbackSpeed) FontWeight.Bold else FontWeight.Normal,
                                         )
                                     },
                                     onClick = {
                                         onSpeedChange(speed)
                                         showSpeedMenu = false
-                                    }
+                                    },
                                 )
                             }
                         }
                     }
-                    
+
                     // 收藏按钮
                     IconButton(
                         onClick = onToggleFavorite,
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                     ) {
                         Icon(
                             imageVector = if (uiState.isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = "收藏",
                             tint = if (uiState.isFavorited) MaterialTheme.colorScheme.primary else Color.White,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                 }
-                
+
                 // 右侧：总时长
                 Text(
                     text = formatTime(uiState.duration),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }
@@ -402,128 +399,128 @@ private fun VideoPlayerControls(
     onFastForward: () -> Unit,
     onRewind: () -> Unit,
     onFullscreenToggle: () -> Unit = {},
-    onAddToFavorite: () -> Unit = {}
+    onAddToFavorite: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                Color.Black.copy(alpha = 0.7f)
+                Color.Black.copy(alpha = 0.7f),
             )
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         // 进度条
         VideoProgressBar(
             currentPosition = uiState.currentPosition,
             duration = uiState.duration,
-            onSeek = onSeek
+            onSeek = onSeek,
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // 控制按钮
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // 快退按钮
             IconButton(
                 onClick = onRewind,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
+                    .background(Color.White.copy(alpha = 0.2f)),
             ) {
                 Icon(
                     Icons.Default.Replay10,
                     contentDescription = "快退10秒",
-                    tint = Color.White
+                    tint = Color.White,
                 )
             }
-            
+
             // 播放/暂停按钮
             IconButton(
                 onClick = onPlayPause,
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.3f))
+                    .background(Color.White.copy(alpha = 0.3f)),
             ) {
                 Icon(
                     imageVector = if (uiState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = if (uiState.isPlaying) "暂停" else "播放",
                     tint = Color.White,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(32.dp),
                 )
             }
-            
+
             // 快进按钮
             IconButton(
                 onClick = onFastForward,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
+                    .background(Color.White.copy(alpha = 0.2f)),
             ) {
                 Icon(
                     Icons.Default.Forward10,
                     contentDescription = "快进10秒",
-                    tint = Color.White
+                    tint = Color.White,
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // 收藏按钮
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
         ) {
             ElevatedButton(
                 onClick = onAddToFavorite,
                 colors = ButtonDefaults.elevatedButtonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp),
             ) {
                 Icon(
                     Icons.Default.FavoriteBorder,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("一键收藏到播放列表")
             }
         }
-        
+
         // 时间显示和全屏按钮
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = formatTime(uiState.currentPosition),
                 color = Color.White,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
-            
+
             IconButton(
                 onClick = onFullscreenToggle,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp),
             ) {
                 Icon(
                     imageVector = if (uiState.isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
                     contentDescription = if (uiState.isFullscreen) "退出全屏" else "全屏",
-                    tint = Color.White
+                    tint = Color.White,
                 )
             }
-            
+
             Text(
                 text = formatTime(uiState.duration),
                 color = Color.White,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
         }
     }
@@ -533,19 +530,21 @@ private fun VideoPlayerControls(
 private fun VideoProgressBar(
     currentPosition: Long,
     duration: Long,
-    onSeek: (Long) -> Unit
+    onSeek: (Long) -> Unit,
 ) {
     var isDragging by remember { mutableStateOf(false) }
     var dragPosition by remember { mutableStateOf(0f) }
-    
+
     val progress = if (duration > 0) {
         if (isDragging) dragPosition else currentPosition.toFloat() / duration.toFloat()
-    } else 0f
-    
+    } else {
+        0f
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(40.dp)
+            .height(40.dp),
     ) {
         Slider(
             value = progress,
@@ -563,8 +562,8 @@ private fun VideoProgressBar(
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTrackColor = Color.White.copy(alpha = 0.3f)
-            )
+                inactiveTrackColor = Color.White.copy(alpha = 0.3f),
+            ),
         )
     }
 }
@@ -574,27 +573,27 @@ private fun EnhancedVideoProgressBar(
     modifier: Modifier = Modifier,
     currentPosition: Long,
     duration: Long,
-    onSeek: (Long) -> Unit
+    onSeek: (Long) -> Unit,
 ) {
     val progress = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f
     var isDragging by remember { mutableStateOf(false) }
     var dragPosition by remember { mutableStateOf(0f) }
-    
+
     val animatedProgress by animateFloatAsState(
         targetValue = if (isDragging) dragPosition else progress,
         animationSpec = tween(durationMillis = 100),
-        label = "progress"
+        label = "progress",
     )
-    
+
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(32.dp)
-                .padding(horizontal = 8.dp)
+                .padding(horizontal = 8.dp),
         ) {
             // 背景轨道
             Box(
@@ -604,10 +603,10 @@ private fun EnhancedVideoProgressBar(
                     .align(Alignment.Center)
                     .background(
                         Color.White.copy(alpha = 0.3f),
-                        RoundedCornerShape(2.dp)
-                    )
+                        RoundedCornerShape(2.dp),
+                    ),
             )
-            
+
             // 进度轨道
             Box(
                 modifier = Modifier
@@ -616,10 +615,10 @@ private fun EnhancedVideoProgressBar(
                     .align(Alignment.CenterStart)
                     .background(
                         MaterialTheme.colorScheme.primary,
-                        RoundedCornerShape(2.dp)
-                    )
+                        RoundedCornerShape(2.dp),
+                    ),
             )
-            
+
             // 拖拽滑块
             Box(
                 modifier = Modifier
@@ -628,27 +627,27 @@ private fun EnhancedVideoProgressBar(
                     .align(Alignment.CenterStart)
                     .background(
                         MaterialTheme.colorScheme.primary,
-                        CircleShape
+                        CircleShape,
                     )
                     .border(
                         2.dp,
                         Color.White,
-                        CircleShape
+                        CircleShape,
                     )
                     .pointerInput(Unit) {
                         detectDragGestures(
-                            onDragStart = { 
-                                isDragging = true 
+                            onDragStart = {
+                                isDragging = true
                             },
-                            onDragEnd = { 
+                            onDragEnd = {
                                 isDragging = false
                                 onSeek((dragPosition * duration).toLong())
-                            }
+                            },
                         ) { _, dragAmount ->
                             val newPosition = (dragPosition + dragAmount.x / size.width).coerceIn(0f, 1f)
                             dragPosition = newPosition
                         }
-                    }
+                    },
             )
         }
     }

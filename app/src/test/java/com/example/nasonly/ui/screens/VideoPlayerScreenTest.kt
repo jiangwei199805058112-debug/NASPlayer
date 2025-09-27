@@ -1,8 +1,8 @@
 package com.example.nasonly.ui.screens
 
 import com.example.nasonly.ui.viewmodel.VideoPlayerUiState
-import org.junit.Test
 import org.junit.Assert.*
+import org.junit.Test
 
 /**
  * 视频播放器屏幕增强功能测试
@@ -12,7 +12,7 @@ class VideoPlayerScreenTest {
     @Test
     fun testVideoPlayerUiState_defaultValues() {
         val uiState = VideoPlayerUiState()
-        
+
         // 验证默认值
         assertFalse("默认不应该在播放", uiState.isPlaying)
         assertFalse("默认不应该在缓冲", uiState.isBuffering)
@@ -31,9 +31,9 @@ class VideoPlayerScreenTest {
             currentPosition = 30000L,
             duration = 120000L,
             playbackSpeed = 1.5f,
-            isFavorited = true
+            isFavorited = true,
         )
-        
+
         // 验证收藏状态
         assertTrue("应该在播放", uiState.isPlaying)
         assertEquals("播放位置应该是30秒", 30000L, uiState.currentPosition)
@@ -48,7 +48,7 @@ class VideoPlayerScreenTest {
         // 注意：这需要我们在测试类中复制formatTime函数，或者将其移到工具类中
         val timeMs = 125000L // 2分5秒
         val expected = "02:05"
-        
+
         val result = formatTimeForTest(timeMs)
         assertEquals("时间格式化应该正确", expected, result)
     }
@@ -56,7 +56,7 @@ class VideoPlayerScreenTest {
     @Test
     fun testPlaybackSpeedOptions() {
         val speedOptions = listOf(0.5f, 1.0f, 1.5f, 2.0f)
-        
+
         // 验证播放速度选项
         assertTrue("应该包含0.5倍速", speedOptions.contains(0.5f))
         assertTrue("应该包含正常速度", speedOptions.contains(1.0f))

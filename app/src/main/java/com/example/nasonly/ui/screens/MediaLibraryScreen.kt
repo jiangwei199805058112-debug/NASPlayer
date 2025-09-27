@@ -1,5 +1,6 @@
 package com.example.nasonly.ui.screens
 
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,28 +15,35 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.nasonly.ui.viewmodel.MediaLibraryViewModel
-import com.example.nasonly.ui.viewmodel.HistoryItem
-import com.example.nasonly.ui.components.EnhancedVideoList
-import com.example.nasonly.ui.components.VideoListToolbar
-import com.example.nasonly.ui.components.SortOrder
-import com.example.nasonly.ui.components.ViewMode
-import com.example.nasonly.core.ui.components.LoadingIndicator
 import com.example.nasonly.core.ui.components.ErrorDialog
-import android.net.Uri
+import com.example.nasonly.core.ui.components.LoadingIndicator
+import com.example.nasonly.ui.components.EnhancedVideoList
+import com.example.nasonly.ui.components.SortOrder
+import com.example.nasonly.ui.components.VideoListToolbar
+import com.example.nasonly.ui.components.ViewMode
+import com.example.nasonly.ui.viewmodel.HistoryItem
+import com.example.nasonly.ui.viewmodel.MediaLibraryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MediaLibraryScreen(
     navController: NavController,
-    viewModel: MediaLibraryViewModel = hiltViewModel()
+    host: String = "",
+    share: String = "",
+    viewModel: MediaLibraryViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("媒体文件", "播放历史")
 
     LaunchedEffect(Unit) {
-        viewModel.loadMediaFiles()
+        if (host.isNotEmpty() && share.isNotEmpty()) {
+            // 如果有host和share参数，从NAS加载
+            viewModel.loadMediaFiles("smb://$host/$share")
+        } else {
+            // 默认加载本地或上次路径
+            viewModel.loadMediaFiles()
+        }
         viewModel.loadPlaybackHistory()
     }
 
@@ -44,43 +52,43 @@ fun MediaLibraryScreen(
             title = { Text("媒体库") },
             actions = {
                 IconButton(
-                    onClick = { 
+                    onClick = {
                         navController.navigate("playlist_management")
-                    }
+                    },
                 ) {
                     Icon(Icons.Default.List, contentDescription = "媒体库")
                 }
                 IconButton(
-                    onClick = { 
+                    onClick = {
                         if (selectedTabIndex == 0) {
                             viewModel.refreshMediaFiles()
                         } else {
                             viewModel.loadPlaybackHistory()
                         }
-                    }
+                    },
                 ) {
                     Icon(Icons.Default.Refresh, contentDescription = "刷新")
                 }
                 IconButton(
-                    onClick = { 
+                    onClick = {
                         navController.navigate("settings")
-                    }
+                    },
                 ) {
                     Icon(Icons.Default.Settings, contentDescription = "设置")
                 }
-            }
+            },
         )
 
         // 标签页
         TabRow(
             selectedTabIndex = selectedTabIndex,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTabIndex == index,
                     onClick = { selectedTabIndex = index },
-                    text = { Text(title) }
+                    text = { Text(title) },
                 )
             }
         }
@@ -100,7 +108,7 @@ fun MediaLibraryScreen(
                         }
                     },
                     onRetry = { viewModel.refreshMediaFiles() },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
             1 -> {
@@ -114,7 +122,7 @@ fun MediaLibraryScreen(
                     },
                     onDeleteHistoryItem = { viewModel.deleteHistoryItem(it) },
                     onClearHistory = { viewModel.clearPlaybackHistory() },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }
@@ -126,13 +134,13 @@ fun MediaLibraryScreen(
         ErrorDialog(
             message = errorMessage,
             onDismiss = { viewModel.clearError() },
-            onRetry = { 
+            onRetry = {
                 if (selectedTabIndex == 0) {
                     viewModel.refreshMediaFiles()
                 } else {
                     viewModel.loadPlaybackHistory()
                 }
-            }
+            },
         )
     }
 }
@@ -142,13 +150,13 @@ private fun MediaFilesTab(
     uiState: com.example.nasonly.ui.viewmodel.MediaLibraryUiState,
     onFileClick: (MediaItem) -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var sortOrder by remember { mutableStateOf(SortOrder.NAME_ASC) }
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }
     var showThumbnails by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
-    
+
     // 过滤文件
     val filteredFiles = remember(uiState.files, searchQuery) {
         if (searchQuery.isEmpty()) {
@@ -159,7 +167,7 @@ private fun MediaFilesTab(
             }
         }
     }
-    
+
     Column(modifier = modifier) {
         // 工具栏
         if (uiState.files.isNotEmpty()) {
@@ -171,32 +179,32 @@ private fun MediaFilesTab(
                 onViewModeChange = { viewMode = it },
                 onShowThumbnailsChange = { showThumbnails = it },
                 onSearch = { searchQuery = it },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
-        
+
         when {
             uiState.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     LoadingIndicator()
                 }
             }
-            
+
             filteredFiles.isEmpty() && !uiState.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
                             text = if (searchQuery.isEmpty()) "未找到媒体文件" else "未找到匹配的文件",
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
                         )
                         if (searchQuery.isEmpty()) {
                             Button(onClick = onRetry) {
@@ -206,7 +214,7 @@ private fun MediaFilesTab(
                     }
                 }
             }
-            
+
             else -> {
                 EnhancedVideoList(
                     files = filteredFiles,
@@ -218,7 +226,7 @@ private fun MediaFilesTab(
                             name = smbFile.name,
                             path = smbFile.path,
                             size = smbFile.size,
-                            isDirectory = smbFile.isDirectory
+                            isDirectory = smbFile.isDirectory,
                         )
                         onFileClick(media)
                     },
@@ -228,7 +236,7 @@ private fun MediaFilesTab(
                     onAddToPlaylist = { _ ->
                         // FIXME: Feature not implemented - show add to playlist dialog
                     },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }
@@ -242,7 +250,7 @@ private fun PlaybackHistoryTab(
     onHistoryItemClick: (HistoryItem) -> Unit,
     onDeleteHistoryItem: (HistoryItem) -> Unit,
     onClearHistory: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         // 顶部工具栏
@@ -251,7 +259,7 @@ private fun PlaybackHistoryTab(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.End,
             ) {
                 TextButton(onClick = onClearHistory) {
                     Text("清除全部")
@@ -263,36 +271,36 @@ private fun PlaybackHistoryTab(
             isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     LoadingIndicator()
                 }
             }
-            
+
             historyItems.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = "暂无播放历史",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            
+
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(historyItems) { historyItem ->
                         HistoryItemCard(
                             historyItem = historyItem,
                             onClick = { onHistoryItemClick(historyItem) },
-                            onDelete = { onDeleteHistoryItem(historyItem) }
+                            onDelete = { onDeleteHistoryItem(historyItem) },
                         )
                     }
                 }
@@ -304,19 +312,19 @@ private fun PlaybackHistoryTab(
 @Composable
 private fun MediaItemCard(
     media: MediaItem,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable { onClick() },
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Icon(
                 imageVector = if (media.isDirectory) Icons.Default.Folder else Icons.Default.Movie,
@@ -325,19 +333,19 @@ private fun MediaItemCard(
                     MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.secondary
-                }
+                },
             )
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = media.name,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
                 )
                 if (!media.isDirectory && media.size > 0) {
                     Text(
                         text = formatFileSize(media.size),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -349,61 +357,61 @@ private fun MediaItemCard(
 private fun HistoryItemCard(
     historyItem: HistoryItem,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable { onClick() },
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Icon(
                 imageVector = Icons.Default.Movie,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary
+                tint = MaterialTheme.colorScheme.secondary,
             )
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = historyItem.fileName,
                     style = MaterialTheme.typography.bodyLarge,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-                
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "播放至 ${formatPosition(historyItem.position)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = "•",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = historyItem.lastPlayed,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            
+
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "删除",
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
                 )
             }
         }
@@ -424,7 +432,7 @@ private fun formatPosition(positionMs: Long): String {
     val hours = totalSeconds / 3600
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
-    
+
     return if (hours > 0) {
         String.format("%d:%02d:%02d", hours, minutes, seconds)
     } else {
@@ -436,5 +444,5 @@ data class MediaItem(
     val name: String,
     val path: String,
     val size: Long = 0,
-    val isDirectory: Boolean = false
+    val isDirectory: Boolean = false,
 )

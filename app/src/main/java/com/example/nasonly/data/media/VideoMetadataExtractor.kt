@@ -5,8 +5,6 @@ import android.graphics.Bitmap
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
-import android.media.ThumbnailUtils
-import android.util.Size
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,9 +19,9 @@ import javax.inject.Singleton
  */
 @Singleton
 class VideoMetadataExtractor @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
-    
+
     /**
      * 提取视频元数据
      */
@@ -31,20 +29,20 @@ class VideoMetadataExtractor @Inject constructor(
         val retriever = MediaMetadataRetriever()
         try {
             retriever.setDataSource(videoPath)
-            
+
             val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
             val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
             val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
             val bitrate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)?.toLongOrNull() ?: 0L
             val frameRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloatOrNull() ?: 0f
-            
+
             // 音频信息
             val audioChannels = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER)?.toIntOrNull() ?: 0
             val audioSampleRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)?.toIntOrNull() ?: 0
-            
+
             // 编解码器信息
             val videoCodec = getVideoCodec(videoPath)
-            
+
             VideoMetadata(
                 duration = duration,
                 width = width,
@@ -53,7 +51,7 @@ class VideoMetadataExtractor @Inject constructor(
                 bitrate = bitrate,
                 codecName = videoCodec,
                 audioChannels = audioChannels,
-                audioSampleRate = audioSampleRate
+                audioSampleRate = audioSampleRate,
             )
         } catch (e: Exception) {
             VideoMetadata()
@@ -65,7 +63,7 @@ class VideoMetadataExtractor @Inject constructor(
             }
         }
     }
-    
+
     /**
      * 生成视频缩略图
      */
@@ -73,21 +71,21 @@ class VideoMetadataExtractor @Inject constructor(
         val retriever = MediaMetadataRetriever()
         try {
             retriever.setDataSource(videoPath)
-            
+
             val bitmap = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
             if (bitmap != null) {
                 val thumbnailFile = File(context.cacheDir, "thumbnails")
                 if (!thumbnailFile.exists()) {
                     thumbnailFile.mkdirs()
                 }
-                
+
                 val fileName = "${videoPath.hashCode()}.jpg"
                 val file = File(thumbnailFile, fileName)
-                
+
                 FileOutputStream(file).use { fos ->
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos)
                 }
-                
+
                 bitmap.recycle()
                 file.absolutePath
             } else {
@@ -103,20 +101,20 @@ class VideoMetadataExtractor @Inject constructor(
             }
         }
     }
-    
+
     /**
      * 批量生成缩略图
      */
     suspend fun generateThumbnails(videoPaths: List<String>): Map<String, String?> = withContext(Dispatchers.IO) {
         val results = mutableMapOf<String, String?>()
-        
+
         videoPaths.forEach { videoPath ->
             results[videoPath] = generateThumbnail(videoPath)
         }
-        
+
         results
     }
-    
+
     /**
      * 清理缓存的缩略图
      */
@@ -132,7 +130,7 @@ class VideoMetadataExtractor @Inject constructor(
             // 忽略清理异常
         }
     }
-    
+
     /**
      * 获取视频编解码器信息
      */
@@ -140,11 +138,11 @@ class VideoMetadataExtractor @Inject constructor(
         val extractor = MediaExtractor()
         try {
             extractor.setDataSource(videoPath)
-            
+
             for (i in 0 until extractor.trackCount) {
                 val format = extractor.getTrackFormat(i)
                 val mime = format.getString(MediaFormat.KEY_MIME)
-                
+
                 if (mime?.startsWith("video/") == true) {
                     return when (mime) {
                         "video/avc" -> "H.264"
@@ -158,7 +156,7 @@ class VideoMetadataExtractor @Inject constructor(
                     }
                 }
             }
-            
+
             return null
         } catch (e: Exception) {
             return null
@@ -183,5 +181,5 @@ data class VideoMetadata(
     val bitrate: Long = 0L,
     val codecName: String? = null,
     val audioChannels: Int = 0,
-    val audioSampleRate: Int = 0
+    val audioSampleRate: Int = 0,
 )

@@ -26,12 +26,12 @@ data class NasConfig(
     val username: String = "",
     val password: String = "",
     val domain: String = "",
-    val smbVersion: String = ""
+    val smbVersion: String = "",
 )
 
 @Singleton
 class NasPrefs @Inject constructor(
-    private val context: Context
+    private val context: Context,
 ) {
     suspend fun save(
         host: String,
@@ -39,7 +39,7 @@ class NasPrefs @Inject constructor(
         username: String,
         password: String,
         domain: String,
-        smbVersion: String
+        smbVersion: String,
     ) {
         context.dataStore.edit { prefs ->
             prefs[NasPrefsKeys.HOST] = host
@@ -58,7 +58,7 @@ class NasPrefs @Inject constructor(
             username = prefs[NasPrefsKeys.USER] ?: "",
             password = prefs[NasPrefsKeys.PASS] ?: "",
             domain = prefs[NasPrefsKeys.DOMAIN] ?: "",
-            smbVersion = prefs[NasPrefsKeys.SMB_VER] ?: ""
+            smbVersion = prefs[NasPrefsKeys.SMB_VER] ?: "",
         )
     }
 }

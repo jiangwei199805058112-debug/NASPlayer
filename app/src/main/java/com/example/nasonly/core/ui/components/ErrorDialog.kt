@@ -10,7 +10,7 @@ fun ErrorDialog(
     title: String = "错误",
     message: String,
     onDismiss: () -> Unit,
-    onRetry: (() -> Unit)? = null
+    onRetry: (() -> Unit)? = null,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -27,6 +27,6 @@ fun ErrorDialog(
                     Text("重试")
                 }
             }
-        }
+        },
     )
 }

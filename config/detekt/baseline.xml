@@ -1,0 +1,314 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>detekt.complexity.LongParameterList:NasPrefs.kt$NasPrefs$( host: String, share: String, username: String, password: String, domain: String, smbVersion: String, )</ID>
+    <ID>detekt.complexity.NestedBlockDepth:VideoMetadataExtractor.kt$VideoMetadataExtractor$private fun getVideoCodec(videoPath: String): String?</ID>
+    <ID>detekt.complexity.TooManyFunctions:SmbConnectionManager.kt$SmbConnectionManager : SmbManager</ID>
+    <ID>detekt.complexity.TooManyFunctions:PlaylistItemDao.kt$PlaylistItemDao</ID>
+    <ID>detekt.complexity.TooManyFunctions:UserPreferences.kt$UserPreferences</ID>
+    <ID>detekt.complexity.LongParameterList:VideoGestureOverlay.kt$( modifier: Modifier = Modifier, onVolumeChange: (Float) -> Unit = {}, onBrightnessChange: (Float) -> Unit = {}, onSeek: (Long) -> Unit = {}, currentPosition: Long = 0L, duration: Long = 0L, content: @Composable () -> Unit, )</ID>
+    <ID>detekt.complexity.LongMethod:VideoGestureOverlay.kt$@Composable fun VideoGestureOverlay( modifier: Modifier = Modifier, onVolumeChange: (Float) -> Unit = {}, onBrightnessChange: (Float) -> Unit = {}, onSeek: (Long) -> Unit = {}, currentPosition: Long = 0L, duration: Long = 0L, content: @Composable () -> Unit, )</ID>
+    <ID>detekt.complexity.LongMethod:VideoGestureOverlay.kt$@Composable private fun GestureIndicator( gestureType: GestureType, value: Float, currentPosition: Long, duration: Long, )</ID>
+    <ID>detekt.complexity.CyclomaticComplexMethod:VideoGestureOverlay.kt$@Composable fun VideoGestureOverlay( modifier: Modifier = Modifier, onVolumeChange: (Float) -> Unit = {}, onBrightnessChange: (Float) -> Unit = {}, onSeek: (Long) -> Unit = {}, currentPosition: Long = 0L, duration: Long = 0L, content: @Composable () -> Unit, )</ID>
+    <ID>detekt.complexity.LongParameterList:EnhancedVideoList.kt$( files: List<SmbFileInfo>, showThumbnails: Boolean = true, viewMode: ViewMode = ViewMode.LIST, sortOrder: SortOrder = SortOrder.NAME_ASC, onFileClick: (SmbFileInfo) -> Unit, onFileLongClick: (SmbFileInfo) -> Unit = {}, onAddToPlaylist: (SmbFileInfo) -> Unit = {}, modifier: Modifier = Modifier, )</ID>
+    <ID>detekt.complexity.LongParameterList:EnhancedVideoList.kt$( @Suppress("UNUSED_PARAMETER") sortOrder: SortOrder, viewMode: ViewMode, showThumbnails: Boolean, onSortOrderChange: (SortOrder) -> Unit, onViewModeChange: (ViewMode) -> Unit, onShowThumbnailsChange: (Boolean) -> Unit, onSearch: (String) -> Unit = {}, modifier: Modifier = Modifier, )</ID>
+    <ID>detekt.complexity.LongMethod:EnhancedVideoList.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun EnhancedVideoListItem( file: SmbFileInfo, showThumbnail: Boolean = true, onClick: () -> Unit, onLongClick: () -> Unit = {}, onAddToPlaylist: () -> Unit = {}, )</ID>
+    <ID>detekt.complexity.LongMethod:EnhancedVideoList.kt$@Composable fun VideoListToolbar( @Suppress("UNUSED_PARAMETER") sortOrder: SortOrder, viewMode: ViewMode, showThumbnails: Boolean, onSortOrderChange: (SortOrder) -> Unit, onViewModeChange: (ViewMode) -> Unit, onShowThumbnailsChange: (Boolean) -> Unit, onSearch: (String) -> Unit = {}, modifier: Modifier = Modifier, )</ID>
+    <ID>detekt.complexity.LongMethod:EnhancedVideoList.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun EnhancedVideoGridItem( file: SmbFileInfo, showThumbnail: Boolean = true, onClick: () -> Unit, onLongClick: () -> Unit = {}, onAddToPlaylist: () -> Unit = {}, )</ID>
+    <ID>detekt.complexity.LongParameterList:VideoPlayerViewModel.kt$VideoPlayerViewModel$( @Suppress("UNUSED_PARAMETER") private val savedStateHandle: SavedStateHandle, private val exoPlayerManager: ExoPlayerManager, private val smbRepository: SmbRepository, private val playbackHistoryDao: PlaybackHistoryDao, private val playlistItemDao: PlaylistItemDao, private val playlistDao: PlaylistDao, private val userPreferences: UserPreferences, )</ID>
+    <ID>detekt.complexity.TooManyFunctions:VideoPlayerViewModel.kt$VideoPlayerViewModel : ViewModel</ID>
+    <ID>detekt.complexity.LongParameterList:NasConfigViewModel.kt$NasConfigViewModel$( host: String, share: String, username: String, password: String, domain: String, smbVersion: String, )</ID>
+    <ID>detekt.complexity.LongParameterList:NasConfigViewModel.kt$NasConfigViewModel$( host: String, share: String, username: String, password: String, domain: String, @Suppress("UNUSED_PARAMETER") smbVersion: String, )</ID>
+    <ID>detekt.complexity.TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : ViewModel</ID>
+    <ID>detekt.complexity.LongMethod:PlaylistManagementScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PlaylistCard( playlist: Playlist, onPlay: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit, )</ID>
+    <ID>detekt.complexity.LongMethod:PlaylistManagementScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PlaylistManagementScreen( navController: androidx.navigation.NavController, playlistViewModel: PlaylistViewModel = hiltViewModel(), )</ID>
+    <ID>detekt.complexity.LongParameterList:PlaylistDetailScreen.kt$( playlistId: Long, playlistName: String, onNavigateBack: () -> Unit, onPlayVideo: (String) -> Unit, onAddVideos: () -> Unit, playlistViewModel: PlaylistViewModel = hiltViewModel(), )</ID>
+    <ID>detekt.complexity.LongMethod:PlaylistDetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PlaylistDetailScreen( playlistId: Long, playlistName: String, onNavigateBack: () -> Unit, onPlayVideo: (String) -> Unit, onAddVideos: () -> Unit, playlistViewModel: PlaylistViewModel = hiltViewModel(), )</ID>
+    <ID>detekt.complexity.LongMethod:PlaylistDetailScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PlaylistItemCard( item: PlaylistItem, index: Int, onPlay: () -> Unit, onRemove: () -> Unit, )</ID>
+    <ID>detekt.complexity.LongMethod:NasConfigScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun NasConfigScreen( navController: NavController, viewModel: NasConfigViewModel = hiltViewModel(), )</ID>
+    <ID>detekt.complexity.CyclomaticComplexMethod:NasConfigScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun NasConfigScreen( navController: NavController, viewModel: NasConfigViewModel = hiltViewModel(), )</ID>
+    <ID>detekt.complexity.LongParameterList:VideoPlayerScreen.kt$( modifier: Modifier = Modifier, uiState: VideoPlayerUiState, onPlayPause: () -> Unit, onSeek: (Long) -> Unit, onFastForward: () -> Unit, onRewind: () -> Unit, onFullscreenToggle: () -> Unit = {}, onAddToFavorite: () -> Unit = {}, )</ID>
+    <ID>detekt.complexity.LongMethod:VideoPlayerScreen.kt$@Composable private fun VideoPlayerControls( modifier: Modifier = Modifier, uiState: VideoPlayerUiState, onPlayPause: () -> Unit, onSeek: (Long) -> Unit, onFastForward: () -> Unit, onRewind: () -> Unit, onFullscreenToggle: () -> Unit = {}, onAddToFavorite: () -> Unit = {}, )</ID>
+    <ID>detekt.complexity.LongMethod:VideoPlayerScreen.kt$@Composable private fun EnhancedVideoPlayerControls( modifier: Modifier = Modifier, uiState: VideoPlayerUiState, onSeek: (Long) -> Unit, onSpeedChange: (Float) -> Unit, onToggleFavorite: () -> Unit, )</ID>
+    <ID>detekt.complexity.LongMethod:VideoPlayerScreen.kt$@Composable private fun EnhancedVideoProgressBar( modifier: Modifier = Modifier, currentPosition: Long, duration: Long, onSeek: (Long) -> Unit, )</ID>
+    <ID>detekt.complexity.LongMethod:VideoPlayerScreen.kt$@Composable fun VideoPlayerScreen( uri: String, viewModel: VideoPlayerViewModel = hiltViewModel(), )</ID>
+    <ID>detekt.complexity.CyclomaticComplexMethod:VideoPlayerScreen.kt$@Composable fun VideoPlayerScreen( uri: String, viewModel: VideoPlayerViewModel = hiltViewModel(), )</ID>
+    <ID>detekt.complexity.LongParameterList:MediaLibraryScreen.kt$( historyItems: List<HistoryItem>, isLoading: Boolean, onHistoryItemClick: (HistoryItem) -> Unit, onDeleteHistoryItem: (HistoryItem) -> Unit, onClearHistory: () -> Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>detekt.complexity.LongMethod:MediaLibraryScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun MediaLibraryScreen( navController: NavController, viewModel: MediaLibraryViewModel = hiltViewModel(), )</ID>
+    <ID>detekt.complexity.LongMethod:MediaLibraryScreen.kt$@Composable private fun MediaFilesTab( uiState: com.example.nasonly.ui.viewmodel.MediaLibraryUiState, onFileClick: (MediaItem) -> Unit, onRetry: () -> Unit, modifier: Modifier = Modifier, )</ID>
+    <ID>detekt.complexity.LongParameterList:EnhancedSettingsScreen.kt$( title: String, description: String, value: Float, valueRange: ClosedFloatingPointRange<Float>, steps: Int = 0, onValueChange: (Float) -> Unit, )</ID>
+    <ID>detekt.complexity.LongMethod:EnhancedSettingsScreen.kt$@Composable fun UISettingsTab(viewModel: SettingsViewModel)</ID>
+    <ID>detekt.complexity.LongMethod:EnhancedSettingsScreen.kt$@Composable fun NasConfigTab(viewModel: NasConfigViewModel)</ID>
+    <ID>detekt.complexity.LongMethod:EnhancedSettingsScreen.kt$@Composable fun SystemSettingsTab(viewModel: SettingsViewModel)</ID>
+    <ID>detekt.complexity.TooManyFunctions:EnhancedSettingsScreen.kt$com.example.nasonly.ui.screens.EnhancedSettingsScreen.kt</ID>
+    <ID>detekt.complexity.LongMethod:NasDiscoveryScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun NasDiscoveryScreen( viewModel: NasDiscoveryViewModel = hiltViewModel(), @Suppress("UNUSED_PARAMETER") onDeviceConnected: (DeviceInfo) -> Unit = {}, )</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoMetadataExtractor.kt$VideoMetadataExtractor$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbConnectionManager.kt$SmbConnectionManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbDataSource.kt$SmbDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbDataSource.kt$SmbDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbDataSource.kt$SmbDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbDataSource.kt$SmbDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbDataSource.kt$SmbDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbDataSource.kt$SmbDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbDataSource.kt$SmbDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:NasDiscoveryManager.kt$NasDiscoveryManager$e: TimeoutCancellationException</ID>
+    <ID>detekt.exceptions.SwallowedException:NasDiscoveryManager.kt$NasDiscoveryManager$e: SocketTimeoutException</ID>
+    <ID>detekt.exceptions.SwallowedException:NasDiscoveryManager.kt$NasDiscoveryManager$e: SocketTimeoutException</ID>
+    <ID>detekt.exceptions.SwallowedException:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:NasDiscoveryManager.kt$NasDiscoveryManager$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:AppDatabase.kt$AppDatabase.Companion$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:AppDatabase.kt$AppDatabase.Companion$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasRepository.kt$NasRepository$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:NasRepository.kt$NasRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbMediaDataSource.kt$SmbMediaDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbMediaDataSource.kt$SmbMediaDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbMediaDataSource.kt$SmbMediaDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbMediaDataSource.kt$SmbMediaDataSource$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SmbRepository.kt$SmbRepository$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:MainActivity.kt$MainActivity$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:MainActivity.kt$MainActivity$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:VideoPlayerViewModel.kt$VideoPlayerViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasConfigViewModel.kt$NasConfigViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasConfigViewModel.kt$NasConfigViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:PlaylistViewModel.kt$PlaylistViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:PlaylistViewModel.kt$PlaylistViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:PlaylistViewModel.kt$PlaylistViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:PlaylistViewModel.kt$PlaylistViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:PlaylistViewModel.kt$PlaylistViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:PlaylistViewModel.kt$PlaylistViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:PlaylistViewModel.kt$PlaylistViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:PlaylistViewModel.kt$PlaylistViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:SettingsViewModel.kt$SettingsViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:MediaLibraryViewModel.kt$MediaLibraryViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:MediaLibraryViewModel.kt$MediaLibraryViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:MediaLibraryViewModel.kt$MediaLibraryViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:MediaLibraryViewModel.kt$MediaLibraryViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.TooGenericExceptionCaught:NasDiscoveryViewModel.kt$NasDiscoveryViewModel$e: Exception</ID>
+    <ID>detekt.exceptions.SwallowedException:SmbAsyncConnectionTest.kt$SmbAsyncConnectionTest$e: Exception</ID>
+    <ID>detekt.potential-bugs.ImplicitDefaultLocale:NasDiscoveryManager.kt$NasDiscoveryManager$String.format( "%d.%d.%d", ipAddress and 0xff, ipAddress shr 8 and 0xff, ipAddress shr 16 and 0xff, )</ID>
+    <ID>detekt.potential-bugs.ImplicitDefaultLocale:VideoGestureOverlay.kt$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>detekt.potential-bugs.ImplicitDefaultLocale:MediaLibraryViewModel.kt$MediaLibraryViewModel$String.format("%d:%02d:%02d", hours, minutes, seconds)</ID>
+    <ID>detekt.potential-bugs.ImplicitDefaultLocale:MediaLibraryViewModel.kt$MediaLibraryViewModel$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>detekt.potential-bugs.ImplicitDefaultLocale:VideoPlayerScreen.kt$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>detekt.potential-bugs.ImplicitDefaultLocale:MediaLibraryScreen.kt$String.format("%d:%02d:%02d", hours, minutes, seconds)</ID>
+    <ID>detekt.potential-bugs.ImplicitDefaultLocale:MediaLibraryScreen.kt$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>detekt.potential-bugs.ImplicitDefaultLocale:VideoPlayerScreenTest.kt$VideoPlayerScreenTest$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>detekt.style.ForbiddenComment:NavGraph.kt$// TODO: 实现添加视频功能</ID>
+    <ID>detekt.style.WildcardImport:DatabaseModule.kt$import com.example.nasonly.data.db.*</ID>
+    <ID>detekt.style.ReturnCount:VideoMetadataExtractor.kt$VideoMetadataExtractor$private fun getVideoCodec(videoPath: String): String?</ID>
+    <ID>detekt.style.MaxLineLength:VideoMetadataExtractor.kt$VideoMetadataExtractor$val frameRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloatOrNull() ?: 0f</ID>
+    <ID>detekt.style.MaxLineLength:VideoMetadataExtractor.kt$VideoMetadataExtractor$val audioChannels = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER)?.toIntOrNull() ?: 0</ID>
+    <ID>detekt.style.MaxLineLength:VideoMetadataExtractor.kt$VideoMetadataExtractor$val audioSampleRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)?.toIntOrNull() ?: 0</ID>
+    <ID>detekt.style.MagicNumber:VideoMetadataExtractor.kt$VideoMetadataExtractor$80</ID>
+    <ID>detekt.style.ReturnCount:SmbConnectionManager.kt$SmbConnectionManager$override fun connect(): Boolean</ID>
+    <ID>detekt.style.ReturnCount:SmbConnectionManager.kt$SmbConnectionManager$override fun openInputStream(path: String): InputStream?</ID>
+    <ID>detekt.style.ReturnCount:SmbConnectionManager.kt$SmbConnectionManager$override fun openOutputStream(path: String): OutputStream?</ID>
+    <ID>detekt.style.MagicNumber:SmbConnectionManager.kt$SmbConnectionManager$0x10L</ID>
+    <ID>detekt.style.UnusedPrivateProperty:SmbConnectionManager.kt$SmbConnectionManager.Companion$private const val DEFAULT_TIMEOUT = 60000</ID>
+    <ID>detekt.style.UnusedPrivateProperty:SmbConnectionManager.kt$SmbConnectionManager.Companion$private const val SMB_PORT = 445</ID>
+    <ID>detekt.style.MagicNumber:SmbDataSource.kt$SmbFileInfo$3600000</ID>
+    <ID>detekt.style.MagicNumber:SmbDataSource.kt$SmbFileInfo$3600000</ID>
+    <ID>detekt.style.MagicNumber:SmbDataSource.kt$SmbFileInfo$60000</ID>
+    <ID>detekt.style.MagicNumber:SmbDataSource.kt$SmbFileInfo$60000</ID>
+    <ID>detekt.style.MagicNumber:SmbDataSource.kt$SmbFileInfo$1000</ID>
+    <ID>detekt.style.ReturnCount:NasDiscoveryManager.kt$NasDiscoveryManager$private fun getCurrentSubnet(): String?</ID>
+    <ID>detekt.style.WildcardImport:NasDiscoveryManager.kt$import kotlinx.coroutines.*</ID>
+    <ID>detekt.style.WildcardImport:NasDiscoveryManager.kt$import java.net.*</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$5000</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$1024</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$5000</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$3000</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$2048</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$3000</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$254</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$0xff</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$8</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$0xff</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$16</ID>
+    <ID>detekt.style.MagicNumber:NasDiscoveryManager.kt$NasDiscoveryManager$0xff</ID>
+    <ID>detekt.style.WildcardImport:PlaybackHistoryDao.kt$import androidx.room.*</ID>
+    <ID>detekt.style.MaxLineLength:PlaylistDao.kt$PlaylistDao$"UPDATE playlists SET item_count = (SELECT COUNT(*) FROM playlist_items WHERE playlist_id = :playlistId) WHERE id = :playlistId"</ID>
+    <ID>detekt.style.WildcardImport:ScanProgressDao.kt$import androidx.room.*</ID>
+    <ID>detekt.style.WildcardImport:VideoDao.kt$import androidx.room.*</ID>
+    <ID>detekt.style.WildcardImport:UserPreferences.kt$import androidx.datastore.preferences.core.*</ID>
+    <ID>detekt.style.WildcardImport:VideoGestureOverlay.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:VideoGestureOverlay.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:VideoGestureOverlay.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.MagicNumber:VideoGestureOverlay.kt$1000</ID>
+    <ID>detekt.style.MagicNumber:VideoGestureOverlay.kt$1000f</ID>
+    <ID>detekt.style.MagicNumber:VideoGestureOverlay.kt$1000f</ID>
+    <ID>detekt.style.MagicNumber:VideoGestureOverlay.kt$10f</ID>
+    <ID>detekt.style.MagicNumber:VideoGestureOverlay.kt$1000</ID>
+    <ID>detekt.style.MagicNumber:VideoGestureOverlay.kt$60</ID>
+    <ID>detekt.style.MagicNumber:VideoGestureOverlay.kt$60</ID>
+    <ID>detekt.style.UnusedPrivateProperty:VideoGestureOverlay.kt$val screenHeight = configuration.screenHeightDp.dp</ID>
+    <ID>detekt.style.ForbiddenComment:SmbMediaDataSource.kt$SmbMediaDataSource$// TODO: CRITICAL - runBlocking should not be used in DataSource.open()</ID>
+    <ID>detekt.style.WildcardImport:EnhancedVideoList.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:EnhancedVideoList.kt$import androidx.compose.material.icons.filled.*</ID>
+    <ID>detekt.style.WildcardImport:EnhancedVideoList.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:EnhancedVideoList.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.MaxLineLength:EnhancedVideoList.kt$tint = if (showThumbnails) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>detekt.style.MagicNumber:EnhancedVideoList.kt$0.75f</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerViewModel.kt$VideoPlayerViewModel$10</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerViewModel.kt$VideoPlayerViewModel$1000</ID>
+    <ID>detekt.style.MaxLineLength:PlaylistViewModel.kt$PlaylistViewModel$fun</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryViewModel.kt$MediaLibraryViewModel$1000</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryViewModel.kt$MediaLibraryViewModel$3600</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryViewModel.kt$MediaLibraryViewModel$3600</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryViewModel.kt$MediaLibraryViewModel$60</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryViewModel.kt$MediaLibraryViewModel$60</ID>
+    <ID>detekt.style.WildcardImport:PlaylistManagementScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:PlaylistManagementScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:PlaylistManagementScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.ReturnCount:PlaylistDetailScreen.kt$private fun formatFileSize(bytes: Long): String</ID>
+    <ID>detekt.style.WildcardImport:PlaylistDetailScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:PlaylistDetailScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:PlaylistDetailScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$1024.0</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$1024.0</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$1024.0</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$1000</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$3600</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$3600</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$60</ID>
+    <ID>detekt.style.MagicNumber:PlaylistDetailScreen.kt$60</ID>
+    <ID>detekt.style.WildcardImport:NasConfigScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:NasConfigScreen.kt$import androidx.compose.material.icons.filled.*</ID>
+    <ID>detekt.style.WildcardImport:NasConfigScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:NasConfigScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.MagicNumber:NasConfigScreen.kt$2000</ID>
+    <ID>detekt.style.WildcardImport:VideoPlayerScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:VideoPlayerScreen.kt$import androidx.compose.material.icons.filled.*</ID>
+    <ID>detekt.style.WildcardImport:VideoPlayerScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:VideoPlayerScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.MaxLineLength:VideoPlayerScreen.kt$fontWeight = if (speed == uiState.playbackSpeed) FontWeight.Bold else FontWeight.Normal</ID>
+    <ID>detekt.style.MaxLineLength:VideoPlayerScreen.kt$imageVector = if (uiState.isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$5000</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$800</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$1000</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$0.5f</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$0.5f</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$1.5f</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$1000</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$60</ID>
+    <ID>detekt.style.MagicNumber:VideoPlayerScreen.kt$60</ID>
+    <ID>detekt.style.WildcardImport:MediaLibraryScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:MediaLibraryScreen.kt$import androidx.compose.material.icons.filled.*</ID>
+    <ID>detekt.style.WildcardImport:MediaLibraryScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:MediaLibraryScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.ForbiddenComment:MediaLibraryScreen.kt$// FIXME: Feature not implemented - show file details dialog</ID>
+    <ID>detekt.style.ForbiddenComment:MediaLibraryScreen.kt$// FIXME: Feature not implemented - show add to playlist dialog</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1024</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$1000</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$3600</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$3600</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$60</ID>
+    <ID>detekt.style.MagicNumber:MediaLibraryScreen.kt$60</ID>
+    <ID>detekt.style.WildcardImport:EnhancedSettingsScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:EnhancedSettingsScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:EnhancedSettingsScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.MagicNumber:EnhancedSettingsScreen.kt$3</ID>
+    <ID>detekt.style.MagicNumber:EnhancedSettingsScreen.kt$1000</ID>
+    <ID>detekt.style.MagicNumber:EnhancedSettingsScreen.kt$1000</ID>
+    <ID>detekt.style.MagicNumber:EnhancedSettingsScreen.kt$0.5f</ID>
+    <ID>detekt.style.MagicNumber:EnhancedSettingsScreen.kt$0.75f</ID>
+    <ID>detekt.style.MagicNumber:EnhancedSettingsScreen.kt$1.25f</ID>
+    <ID>detekt.style.MagicNumber:EnhancedSettingsScreen.kt$1.5f</ID>
+    <ID>detekt.style.MagicNumber:EnhancedSettingsScreen.kt$1.75f</ID>
+    <ID>detekt.style.UnusedPrivateMember:EnhancedSettingsScreen.kt$private fun getLanguageDisplayName(language: String): String</ID>
+    <ID>detekt.style.WildcardImport:NasDiscoveryScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>detekt.style.WildcardImport:NasDiscoveryScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>detekt.style.WildcardImport:NasDiscoveryScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>detekt.style.UnusedPrivateProperty:Theme.kt$// 保留浅色主题（虽然不使用） private val LightColorScheme = lightColorScheme( primary = Color(0xFF8B5CF6), onPrimary = Color.White, primaryContainer = Color(0xFFEDE9FE), onPrimaryContainer = Color(0xFF3B0764), secondary = Color(0xFFA78BFA), onSecondary = Color.White, secondaryContainer = Color(0xFFDDD6FE), onSecondaryContainer = Color(0xFF4C1D95), tertiary = Color(0xFF06B6D4), onTertiary = Color.White, background = Color(0xFFFFFBFE), onBackground = Color(0xFF1C1B1F), surface = Color(0xFFFFFBFE), onSurface = Color(0xFF1C1B1F), surfaceVariant = Color(0xFFE7E0EC), onSurfaceVariant = Color(0xFF49454F), outline = Color(0xFF79747E), outlineVariant = Color(0xFFCAC4D0), error = Color(0xFFBA1A1A), onError = Color.White, errorContainer = Color(0xFFFFDAD6), onErrorContainer = Color(0xFF410002), )</ID>
+    <ID>detekt.style.WildcardImport:SmbAsyncConnectionTest.kt$import org.junit.Assert.*</ID>
+    <ID>detekt.style.WildcardImport:VideoPlayerScreenTest.kt$import org.junit.Assert.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

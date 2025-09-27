@@ -14,7 +14,7 @@ import javax.inject.Singleton
 @Singleton
 class SmbRepository @Inject constructor(
     private val smbDataSource: SmbDataSource,
-    private val smbConnectionManager: SmbConnectionManager
+    private val smbConnectionManager: SmbConnectionManager,
 ) {
     companion object {
         private const val TAG = "SmbRepository"
@@ -25,7 +25,7 @@ class SmbRepository @Inject constructor(
         share: String,
         username: String,
         password: String,
-        domain: String = ""
+        domain: String = "",
     ): Result<String> {
         return try {
             Log.d(TAG, "Configuring SMB connection for host: $host")
@@ -91,7 +91,7 @@ class SmbRepository @Inject constructor(
     suspend fun listFilesWithMetadata(
         directoryPath: String = "",
         includeMetadata: Boolean = true,
-        generateThumbnails: Boolean = true
+        generateThumbnails: Boolean = true,
     ): Result<List<SmbFileInfo>> {
         return try {
             Log.d(TAG, "Listing files with metadata in directory: $directoryPath")

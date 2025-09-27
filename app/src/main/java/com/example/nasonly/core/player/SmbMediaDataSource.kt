@@ -1,17 +1,17 @@
 package com.example.nasonly.core.player
 
 import android.net.Uri
-import com.example.nasonly.data.smb.SmbDataSource
 import androidx.media3.common.C
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.TransferListener
+import com.example.nasonly.data.smb.SmbDataSource
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.io.InputStream
 
 class SmbMediaDataSource(
-    private val smbDataSource: SmbDataSource
+    private val smbDataSource: SmbDataSource,
 ) : DataSource {
     private var inputStream: InputStream? = null
     private var uri: Uri? = null
@@ -20,7 +20,7 @@ class SmbMediaDataSource(
     override fun open(dataSpec: DataSpec): Long {
         uri = dataSpec.uri
         val path = uri?.path ?: throw IOException("Invalid SMB path")
-        
+
         // TODO: CRITICAL - runBlocking should not be used in DataSource.open()
         // This blocks the calling thread and violates ExoPlayer's contract.
         // Consider pre-opening streams or using async initialization.
@@ -28,9 +28,9 @@ class SmbMediaDataSource(
             val result = runBlocking {
                 smbDataSource.getInputStream(path)
             }
-            inputStream = result.getOrNull() 
+            inputStream = result.getOrNull()
                 ?: throw IOException("Failed to open SMB stream: ${result.exceptionOrNull()?.message}")
-                
+
             if (dataSpec.position > 0) {
                 val seekResult = runBlocking {
                     inputStream?.let { stream ->
@@ -73,7 +73,7 @@ class SmbMediaDataSource(
             uri = null
             bytesRead = 0
         }
-        
+
         try {
             smbDataSource.close()
         } catch (e: Exception) {

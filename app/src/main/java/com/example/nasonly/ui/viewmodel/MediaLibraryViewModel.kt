@@ -2,11 +2,10 @@ package com.example.nasonly.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.nasonly.repository.SmbRepository
-import com.example.nasonly.ui.screens.MediaItem
-import com.example.nasonly.data.db.PlaybackHistory
 import com.example.nasonly.data.db.PlaybackHistoryDao
 import com.example.nasonly.data.smb.SmbFileInfo
+import com.example.nasonly.repository.SmbRepository
+import com.example.nasonly.ui.screens.MediaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MediaLibraryViewModel @Inject constructor(
     private val smbRepository: SmbRepository,
-    private val playbackHistoryDao: PlaybackHistoryDao
+    private val playbackHistoryDao: PlaybackHistoryDao,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MediaLibraryUiState())
     val uiState: StateFlow<MediaLibraryUiState> = _uiState
@@ -29,8 +28,12 @@ class MediaLibraryViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                
-                val result = smbRepository.listFilesWithMetadata(path, includeMetadata = true, generateThumbnails = true)
+
+                val result = smbRepository.listFilesWithMetadata(
+                    path,
+                    includeMetadata = true,
+                    generateThumbnails = true,
+                )
                 result.fold(
                     onSuccess = { smbFiles ->
                         @Suppress("UNUSED_VARIABLE")
@@ -39,28 +42,28 @@ class MediaLibraryViewModel @Inject constructor(
                                 name = smbFile.name,
                                 path = smbFile.path,
                                 size = smbFile.size,
-                                isDirectory = smbFile.isDirectory
+                                isDirectory = smbFile.isDirectory,
                             )
                         }
-                        
+
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             files = smbFiles,
-                            currentPath = path
+                            currentPath = path,
                         )
                         currentPath = path
                     },
                     onFailure = { error ->
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = error.message ?: "加载媒体文件失败"
+                            error = error.message ?: "加载媒体文件失败",
                         )
-                    }
+                    },
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "加载媒体文件异常: ${e.message}"
+                    error = "加载媒体文件异常: ${e.message}",
                 )
             }
         }
@@ -90,17 +93,17 @@ class MediaLibraryViewModel @Inject constructor(
                         fileName = item.videoPath.substringAfterLast("/"),
                         position = item.position,
                         lastPlayed = formatTimestamp(item.updatedAt),
-                        progressPercentage = 0f // 需要视频总时长来计算，暂时设为0
+                        progressPercentage = 0f, // 需要视频总时长来计算，暂时设为0
                     )
                 }
                 _uiState.value = _uiState.value.copy(
                     playbackHistory = historyItems,
-                    isLoading = false
+                    isLoading = false,
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = "加载播放历史失败: ${e.message}",
-                    isLoading = false
+                    isLoading = false,
                 )
             }
         }
@@ -114,7 +117,7 @@ class MediaLibraryViewModel @Inject constructor(
                 loadPlaybackHistory()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "清除播放历史失败: ${e.message}"
+                    error = "清除播放历史失败: ${e.message}",
                 )
             }
         }
@@ -128,7 +131,7 @@ class MediaLibraryViewModel @Inject constructor(
                 loadPlaybackHistory()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "删除历史记录失败: ${e.message}"
+                    error = "删除历史记录失败: ${e.message}",
                 )
             }
         }
@@ -144,7 +147,7 @@ class MediaLibraryViewModel @Inject constructor(
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
-        
+
         return if (hours > 0) {
             String.format("%d:%02d:%02d", hours, minutes, seconds)
         } else {
@@ -158,7 +161,7 @@ data class MediaLibraryUiState(
     val files: List<SmbFileInfo> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val playbackHistory: List<HistoryItem> = emptyList()
+    val playbackHistory: List<HistoryItem> = emptyList(),
 )
 
 data class HistoryItem(
@@ -167,5 +170,5 @@ data class HistoryItem(
     val fileName: String,
     val position: Long,
     val lastPlayed: String,
-    val progressPercentage: Float
+    val progressPercentage: Float,
 )
