@@ -4,6 +4,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.0"
     id("jacoco")
 }
 
@@ -197,27 +198,6 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
         reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.SARIF)
     }
 }
-plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp")
-    id("io.gitlab.arturbosch.detekt") version "1.23.6"
-    id("jacoco")
-}
-
-android {
-    namespace = "com.example.nasonly"
-    compileSdk = 34
-
-    defaultConfig {
-        applicationId = "com.example.nasonly"
-        minSdk = 26
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
 
     buildTypes {
         release {
